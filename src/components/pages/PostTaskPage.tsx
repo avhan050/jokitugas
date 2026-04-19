@@ -20,7 +20,7 @@ export default function PostTaskPage() {
   const serviceFee = Math.ceil(budgetNum * 0.05);
   const totalCost = budgetNum + serviceFee;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setError('');
     if (!title.trim()) { setError('Judul tugas harus diisi'); return; }
     if (!description.trim()) { setError('Deskripsi harus diisi'); return; }
@@ -28,7 +28,7 @@ export default function PostTaskPage() {
     if (budgetNum < 10000) { setError('Budget minimal Rp 10.000'); return; }
     if (new Date(deadline) <= new Date()) { setError('Deadline harus di masa depan'); return; }
 
-    const task = createTask({
+    const success = await createTask({
       clientId: currentUser.id,
       title: title.trim(),
       description: description.trim(),
@@ -37,10 +37,8 @@ export default function PostTaskPage() {
       budget: budgetNum,
     });
 
-    if (task) {
+    if (success) {
       setPage('mytasks');
-    } else {
-      setError('Saldo tidak mencukupi untuk memposting tugas ini');
     }
   };
 

@@ -4,8 +4,11 @@ import { useState } from 'react';
 import { Zap, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
+import { useAppStore } from '@/lib/store';
+
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { setShowAuth } = useAppStore();
 
   return (
     <header className="nav-blur fixed top-0 left-0 right-0 z-50">
@@ -50,14 +53,15 @@ export default function Navbar() {
 
         {/* Desktop Right Side */}
         <div className="hidden md:flex items-center gap-3">
-          <a
-            href="#"
+          <button
+            onClick={() => setShowAuth(true)}
             className="text-sm font-medium transition-colors hover:text-white"
             style={{ color: 'var(--muted-foreground)' }}
           >
             Masuk
-          </a>
+          </button>
           <Button
+            onClick={() => setShowAuth(true)}
             className="text-sm font-semibold px-5 py-2 rounded-lg transition-all hover:opacity-90"
             style={{ background: 'var(--accent)', color: '#0B1120' }}
           >
@@ -95,10 +99,15 @@ export default function Navbar() {
             Keamanan
           </a>
           <div className="flex flex-col gap-2 pt-2" style={{ borderTop: '1px solid var(--border)' }}>
-            <a href="#" className="text-sm font-medium py-2" style={{ color: 'var(--muted-foreground)' }}>
+            <button
+              onClick={() => { setShowAuth(true); setMobileOpen(false); }}
+              className="text-sm font-medium py-2 text-left"
+              style={{ color: 'var(--muted-foreground)' }}
+            >
               Masuk
-            </a>
+            </button>
             <Button
+              onClick={() => { setShowAuth(true); setMobileOpen(false); }}
               className="text-sm font-semibold px-5 py-2 rounded-lg w-full"
               style={{ background: 'var(--accent)', color: '#0B1120' }}
             >

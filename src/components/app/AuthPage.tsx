@@ -3,10 +3,10 @@
 import { useState } from 'react';
 import { useAppStore } from '@/lib/store';
 import { DEMO_ACCOUNTS } from '@/lib/seed';
-import { Zap, Mail, Lock, User, UserCheck, HardHat, ShieldUser } from 'lucide-react';
+import { Zap, Mail, Lock, User, UserCheck, HardHat, ShieldUser, ArrowLeft } from 'lucide-react';
 
 export default function AuthPage() {
-  const { login, register } = useAppStore();
+  const { login, setShowAuth } = useAppStore();
   const [tab, setTab] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -14,26 +14,16 @@ export default function AuthPage() {
   const [role, setRole] = useState<'client' | 'worker'>('client');
   const [error, setError] = useState('');
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     setError('');
-    if (!login(email, password)) {
+    const success = await login(email, password);
+    if (!success) {
       setError('Email atau password salah');
     }
   };
 
   const handleRegister = () => {
-    setError('');
-    if (!name || !email || !password) {
-      setError('Semua field harus diisi');
-      return;
-    }
-    if (password.length < 6) {
-      setError('Password minimal 6 karakter');
-      return;
-    }
-    if (!register(name, email, password, role)) {
-      setError('Email sudah terdaftar');
-    }
+    setError('Fitur pendaftaran saat ini hanya tersedia via Admin');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -64,6 +54,16 @@ export default function AuthPage() {
         className="relative z-10 w-full max-w-md rounded-2xl p-8 animate-in"
         style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
       >
+        {/* Back Button */}
+        <button
+          onClick={() => setShowAuth(false)}
+          className="flex items-center gap-1.5 text-xs font-semibold mb-6 transition-colors hover:text-white"
+          style={{ color: 'var(--muted-foreground)' }}
+        >
+          <ArrowLeft size={14} />
+          Kembali ke Beranda
+        </button>
+
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
@@ -199,7 +199,15 @@ export default function AuthPage() {
                 return (
                   <button
                     key={acc.email}
-                    onClick={() => login(acc.email, acc.password)}
+                    onClick={async () => {
+                      setError('');
+                      setEmail(acc.email);
+                      setPassword(acc.password);
+                      const success = await login(acc.email, acc.password);
+                      if (!success) {
+                        setError('Gagal masuk ke akun demo. Silakan coba lagi.');
+                      }
+                    }}
                     className="py-2 px-2 rounded-lg text-xs font-semibold transition-all"
                     style={{
                       background: 'var(--bg)',

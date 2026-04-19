@@ -7,17 +7,24 @@ import AppLayout from '@/components/app/AppLayout';
 import Modal from '@/components/app/Modal';
 import ToastContainer from '@/components/app/Toast';
 
+import LandingPage from '@/components/pages/LandingPage';
+
 export default function Home() {
-  const { currentUser, _seedIfNeeded, _loadFromStorage } = useAppStore();
+  const { currentUser, showAuth, fetchInitData } = useAppStore();
 
   useEffect(() => {
-    _seedIfNeeded();
-    _loadFromStorage();
-  }, [_seedIfNeeded, _loadFromStorage]);
+    fetchInitData();
+  }, [fetchInitData]);
 
   return (
     <div className="min-h-screen" style={{ background: '#0B1120' }}>
-      {currentUser ? <AppLayout /> : <AuthPage />}
+      {currentUser ? (
+        <AppLayout />
+      ) : showAuth ? (
+        <AuthPage />
+      ) : (
+        <LandingPage />
+      )}
       <Modal />
       <ToastContainer />
     </div>

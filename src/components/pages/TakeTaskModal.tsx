@@ -13,7 +13,7 @@ export default function TakeTaskModal({ taskId }: { taskId: string }) {
   const client = useAppStore.getState().users.find((u) => u.id === task.clientId);
 
   const handleTake = () => {
-    takeTask(taskId, currentUser.id);
+    takeTask(taskId);
     closeModal();
   };
 

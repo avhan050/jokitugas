@@ -2,8 +2,10 @@
 
 import { ArrowRight, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAppStore } from '@/lib/store';
 
 export default function CTASection() {
+  const { setShowAuth } = useAppStore();
   return (
     <section id="keamanan" className="py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -33,6 +35,7 @@ export default function CTASection() {
 
             <div className="flex flex-wrap items-center justify-center gap-4">
               <Button
+                onClick={() => setShowAuth(true)}
                 size="lg"
                 className="font-semibold px-6 py-3 rounded-xl transition-all hover:opacity-90 text-base"
                 style={{ background: '#0B1120', color: '#FFFFFF' }}

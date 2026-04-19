@@ -3,7 +3,8 @@
 import { useState, useRef } from 'react';
 import { useAppStore } from '@/lib/store';
 import { formatRupiah } from '@/lib/helpers';
-import { UploadCloud, Image, Send, CheckCircle } from 'lucide-react';
+import { UploadCloud, Image, Send, CheckCircle, Loader2 } from 'lucide-react';
+import { uploadFile } from '@/lib/supabase';
 
 interface TopupConfirmModalProps {
   amount: number;
@@ -12,22 +13,34 @@ interface TopupConfirmModalProps {
 }
 
 export default function TopupConfirmModal({ amount, note, onConfirm }: TopupConfirmModalProps) {
-  const { closeModal } = useAppStore();
+  const { closeModal, addToast } = useAppStore();
   const [proofUrl, setProofUrl] = useState('');
   const [fileName, setFileName] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (file.size > 5 * 1024 * 1024) {
+      addToast('File terlalu besar (maks 5MB)', 'error');
+      return;
+    }
+
     setFileName(file.name);
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const result = ev.target?.result as string;
-      setProofUrl(result);
-    };
-    reader.readAsDataURL(file);
+    setIsUploading(true);
+    
+    try {
+      const publicUrl = await uploadFile(file, 'proofs');
+      setProofUrl(publicUrl);
+      addToast('Bukti berhasil diupload', 'success');
+    } catch (error) {
+      console.error('Upload error:', error);
+      addToast('Gagal upload bukti. Pastikan Supabase Storage sudah dikonfigurasi.', 'error');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleSubmit = () => {
@@ -79,7 +92,12 @@ export default function TopupConfirmModal({ amount, note, onConfirm }: TopupConf
             className="hidden"
             onChange={handleFileChange}
           />
-          {proofUrl ? (
+          {isUploading ? (
+            <div className="space-y-2">
+              <Loader2 size={32} className="mx-auto animate-spin" style={{ color: 'var(--muted-foreground)' }} />
+              <p className="text-sm font-semibold" style={{ color: 'var(--muted-foreground)' }}>Mengupload...</p>
+            </div>
+          ) : proofUrl ? (
             <div className="space-y-2">
               <CheckCircle size={32} className="mx-auto" style={{ color: 'var(--accent)' }} />
               <p className="text-sm font-semibold" style={{ color: 'var(--accent)' }}>{fileName}</p>
@@ -114,10 +132,11 @@ export default function TopupConfirmModal({ amount, note, onConfirm }: TopupConf
         </button>
         <button
           onClick={handleSubmit}
-          className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all"
+          disabled={!proofUrl || isUploading}
+          className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all disabled:opacity-50"
           style={{ background: 'var(--accent)', color: '#0B1120' }}
         >
-          <Send size={16} />
+          {isUploading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
           Ajukan Top Up
         </button>
       </div>

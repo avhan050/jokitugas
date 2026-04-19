@@ -8,7 +8,7 @@ export default function ReviewWorkModal({ taskId }: { taskId: string }) {
 
   const task = tasks.find((t) => t.id === taskId);
 
-  const handleAction = (decision: 'accept' | 'revise' | 'reject') => {
+  const handleAction = (decision: 'accept' | 'revision' | 'reject') => {
     reviewWork(taskId, decision);
     closeModal();
   };
@@ -54,7 +54,7 @@ export default function ReviewWorkModal({ taskId }: { taskId: string }) {
           Terima Hasil Kerja
         </button>
         <button
-          onClick={() => handleAction('revise')}
+          onClick={() => handleAction('revision')}
           className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all"
           style={{ background: 'var(--gold-dim)', color: 'var(--gold)', border: '1px solid var(--gold)' }}
         >

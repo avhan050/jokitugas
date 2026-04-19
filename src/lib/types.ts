@@ -27,6 +27,7 @@ export interface Task {
   workerRating: number | null;
   escrowHeld: boolean;
   submissionNote?: string;
+  submissionUrl?: string;
   takenAt?: string;
 }
 
@@ -49,6 +50,13 @@ export interface AdminSettings {
   bank_account: string;
   bank_owner: string;
   e_wallet: string;
+}
+
+export interface PublicStats {
+  totalCompletedTasks: number;
+  totalWorkers: number;
+  totalUsers: number;
+  averageRating: number;
 }
 
 export interface ToastItem {

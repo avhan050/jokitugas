@@ -3,8 +3,15 @@
 import Image from 'next/image';
 import { Play, ChevronRight, Code, Calculator, TrendingUp, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAppStore } from '@/lib/store';
 
 export default function HeroSection() {
+  const { setShowAuth, publicStats, transactions } = useAppStore();
+
+  const totalEarnings = transactions
+    .filter(t => t.type === 'fee' && t.status === 'approved')
+    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
   return (
     <section className="relative pt-28 pb-20 overflow-hidden">
       {/* Decorative glow blurs */}
@@ -31,12 +38,13 @@ export default function HeroSection() {
 
             {/* Description */}
             <p className="text-base sm:text-lg max-w-lg" style={{ color: 'var(--muted-foreground)' }}>
-              Dapatkan bantuan tugas dari ribuan pengerja profesional. Transaksi aman dengan sistem escrow, hasil terjamin, dan deadline terjaga.
+              Dapatkan bantuan tugas dari {publicStats.totalWorkers}+ pengerja profesional. Transaksi aman dengan sistem escrow, hasil terjamin, dan deadline terjaga.
             </p>
 
             {/* Buttons */}
             <div className="flex flex-wrap gap-3">
               <Button
+                onClick={() => setShowAuth(true)}
                 size="lg"
                 className="font-semibold px-6 py-3 rounded-xl transition-all hover:opacity-90 text-base"
                 style={{ background: 'var(--accent)', color: '#0B1120' }}
@@ -89,11 +97,11 @@ export default function HeroSection() {
                   className="w-9 h-9 rounded-full border-2 flex items-center justify-center text-[10px] font-bold"
                   style={{ borderColor: 'var(--bg)', background: 'var(--accent)', color: '#0B1120' }}
                 >
-                  +2k
+                  {publicStats.totalUsers > 3 ? `+${publicStats.totalUsers - 3}` : '0'}
                 </div>
               </div>
               <div>
-                <p className="text-sm font-medium" style={{ color: 'var(--fg)' }}>Dipercaya 2,000+ mahasiswa</p>
+                <p className="text-sm font-medium" style={{ color: 'var(--fg)' }}>Dipercaya {publicStats.totalUsers}+ mahasiswa</p>
                 <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>dari seluruh Indonesia</p>
               </div>
             </div>
@@ -113,9 +121,9 @@ export default function HeroSection() {
                 {/* Card Header */}
                 <div className="flex items-center justify-between mb-5">
                   <div>
-                    <p className="text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>Total Pendapatan</p>
+                    <p className="text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>Pendapatan Platform</p>
                     <p className="text-2xl font-bold" style={{ color: 'var(--fg)', fontFamily: 'var(--font-space-grotesk)' }}>
-                      Rp 4.250.000
+                      Rp {totalEarnings.toLocaleString('id-ID')}
                     </p>
                   </div>
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--accent-dim)' }}>

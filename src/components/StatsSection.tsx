@@ -1,29 +1,34 @@
-import { BookOpen, Users, Star, Headphones } from 'lucide-react';
+'use client';
 
-const stats = [
-  {
-    icon: BookOpen,
-    value: '10k+',
-    label: 'Tugas Selesai',
-  },
-  {
-    icon: Users,
-    value: '500+',
-    label: 'Joki Berbakat',
-  },
-  {
-    icon: Star,
-    value: '4.9/5',
-    label: 'Rating Kepuasan',
-  },
-  {
-    icon: Headphones,
-    value: '24/7',
-    label: 'Dukungan Sistem',
-  },
-];
+import { BookOpen, Users, Star, Headphones } from 'lucide-react';
+import { useAppStore } from '@/lib/store';
 
 export default function StatsSection() {
+  const { publicStats } = useAppStore();
+
+  const stats = [
+    {
+      icon: BookOpen,
+      value: `${publicStats.totalCompletedTasks}`,
+      label: 'Tugas Selesai',
+    },
+    {
+      icon: Users,
+      value: `${publicStats.totalWorkers}`,
+      label: 'Joki Berbakat',
+    },
+    {
+      icon: Star,
+      value: `${publicStats.averageRating}/5`,
+      label: 'Rating Kepuasan',
+    },
+    {
+      icon: Headphones,
+      value: '24/7',
+      label: 'Dukungan Sistem',
+    },
+  ];
+
   return (
     <section
       className="py-8"

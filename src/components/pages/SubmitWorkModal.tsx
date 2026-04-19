@@ -1,16 +1,45 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useAppStore } from '@/lib/store';
-import { Send } from 'lucide-react';
+import { Send, UploadCloud, CheckCircle, Loader2 } from 'lucide-react';
+import { uploadFile } from '@/lib/supabase';
 
 export default function SubmitWorkModal({ taskId }: { taskId: string }) {
-  const { submitWork, closeModal } = useAppStore();
+  const { submitWork, closeModal, addToast } = useAppStore();
   const [note, setNote] = useState('');
+  const [fileUrl, setFileUrl] = useState('');
+  const [fileName, setFileName] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 20 * 1024 * 1024) {
+      addToast('File terlalu besar (maks 20MB)', 'error');
+      return;
+    }
+
+    setFileName(file.name);
+    setIsUploading(true);
+    
+    try {
+      const publicUrl = await uploadFile(file, 'submissions');
+      setFileUrl(publicUrl);
+      addToast('File hasil joki berhasil diupload', 'success');
+    } catch (error) {
+      console.error('Upload error:', error);
+      addToast('Gagal upload file. Pastikan Supabase Storage sudah dikonfigurasi.', 'error');
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const handleSubmit = () => {
     if (!note.trim()) return;
-    submitWork(taskId, note.trim());
+    useAppStore.getState().submitWork(taskId, note.trim(), fileUrl);
     closeModal();
   };
 
@@ -45,6 +74,42 @@ export default function SubmitWorkModal({ taskId }: { taskId: string }) {
         />
       </div>
 
+      <div>
+        <label className="block text-sm font-semibold mb-2">Hasil Joki (Opsional)</label>
+        <div
+          className="rounded-xl p-4 text-center cursor-pointer transition-all"
+          style={{
+            background: fileUrl ? 'var(--accent-dim)' : 'var(--bg)',
+            border: fileUrl ? '1px solid var(--accent)' : '2px dashed var(--border)',
+          }}
+          onClick={() => !isUploading && fileRef.current?.click()}
+        >
+          <input
+            ref={fileRef}
+            type="file"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+          {isUploading ? (
+            <div className="flex flex-col items-center gap-1">
+              <Loader2 size={24} className="animate-spin" style={{ color: 'var(--muted-foreground)' }} />
+              <p className="text-xs font-semibold" style={{ color: 'var(--muted-foreground)' }}>Mengupload...</p>
+            </div>
+          ) : fileUrl ? (
+            <div className="flex flex-col items-center gap-1">
+              <CheckCircle size={24} style={{ color: 'var(--accent)' }} />
+              <p className="text-xs font-bold truncate max-w-[200px]" style={{ color: 'var(--accent)' }}>{fileName}</p>
+              <p className="text-[10px]" style={{ color: 'var(--muted-foreground)' }}>Klik untuk ganti</p>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-1">
+              <UploadCloud size={24} style={{ color: 'var(--muted-foreground)' }} />
+              <p className="text-xs font-semibold" style={{ color: 'var(--muted-foreground)' }}>Klik untuk upload hasil (maks 20MB)</p>
+            </div>
+          )}
+        </div>
+      </div>
+
       <div className="flex gap-3">
         <button
           onClick={closeModal}
@@ -55,15 +120,15 @@ export default function SubmitWorkModal({ taskId }: { taskId: string }) {
         </button>
         <button
           onClick={handleSubmit}
-          disabled={!note.trim()}
-          className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all"
+          disabled={!note.trim() || isUploading}
+          className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all disabled:opacity-50"
           style={{
             background: note.trim() ? 'var(--accent)' : 'var(--border)',
             color: note.trim() ? '#0B1120' : 'var(--muted-foreground)',
           }}
         >
-          <Send size={16} />
-          Kirim
+          {isUploading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+          Kirim Hasil
         </button>
       </div>
     </div>

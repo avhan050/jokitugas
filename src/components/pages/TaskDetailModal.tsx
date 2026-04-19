@@ -148,17 +148,39 @@ export default function TaskDetailModal({ taskId }: { taskId: string }) {
         </div>
       )}
 
-      {/* Submission note */}
-      {task.submissionNote && (
+      {/* Submission note & file */}
+      {(task.submissionNote || task.submissionUrl) && (
         <div
-          className="rounded-xl p-4"
+          className="rounded-xl p-4 space-y-3"
           style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}
         >
-          <div className="flex items-center gap-2 mb-2">
-            <MessageSquare size={16} style={{ color: 'var(--accent)' }} />
-            <span className="text-sm font-semibold">Catatan Pengiriman</span>
-          </div>
-          <p className="text-sm">{task.submissionNote}</p>
+          {task.submissionNote && (
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <MessageSquare size={16} style={{ color: 'var(--accent)' }} />
+                <span className="text-sm font-semibold">Catatan Pengiriman</span>
+              </div>
+              <p className="text-sm">{task.submissionNote}</p>
+            </div>
+          )}
+          
+          {task.submissionUrl && (
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <MessageSquare size={16} style={{ color: 'var(--accent)' }} />
+                <span className="text-sm font-semibold">File Hasil Joki</span>
+              </div>
+              <a 
+                href={task.submissionUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all"
+                style={{ background: 'var(--accent)', color: '#0B1120' }}
+              >
+                Download Hasil
+              </a>
+            </div>
+          )}
         </div>
       )}
 

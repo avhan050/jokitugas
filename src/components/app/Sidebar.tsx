@@ -102,7 +102,9 @@ export default function Sidebar() {
           </div>
           <div
             className="sidebar-link"
-            onClick={logout}
+            onClick={async () => {
+              await logout();
+            }}
             style={{ color: 'var(--danger)' }}
             onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--danger-dim)')}
             onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}

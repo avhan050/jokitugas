@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 
 export default function AdminPanelPage() {
-  const { transactions, users, tasks, adminSettings, approveTransaction, rejectTransaction, updateAdminSettings, addToast } = useAppStore();
+  const { transactions, users, tasks, adminSettings, approveTransaction, rejectTransaction, updateAdminSettings, addToast, openModal, closeModal } = useAppStore();
 
   const pendingTx = transactions
     .filter((t) => t.status === 'pending' && (t.type === 'topup' || t.type === 'withdraw'))
@@ -188,7 +188,36 @@ export default function AdminPanelPage() {
                   <div className="flex gap-2">
                     {tx.proofUrl !== undefined && tx.type === 'topup' && (
                       <button
-                        onClick={() => addToast('Bukti transfer tersedia', 'info')}
+                        onClick={() => openModal(
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--info-dim)' }}>
+                                <ImageIcon size={20} style={{ color: 'var(--info)' }} />
+                              </div>
+                              <div>
+                                <h3 className="text-lg font-bold" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Bukti Pembayaran</h3>
+                                <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{getUserName(tx.userId)} • {formatDate(tx.createdAt)}</p>
+                              </div>
+                            </div>
+                            <div className="rounded-xl overflow-hidden border border-border bg-bg">
+                              <img 
+                                src={tx.proofUrl} 
+                                alt="Bukti Pembayaran" 
+                                className="w-full h-auto max-h-[70vh] object-contain"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = 'https://placehold.co/600x400/1e293b/white?text=Gambar+tidak+ditemukan';
+                                }}
+                              />
+                            </div>
+                            <button
+                              onClick={closeModal}
+                              className="w-full py-3 rounded-xl text-sm font-bold"
+                              style={{ background: 'var(--bg)', color: 'var(--muted-foreground)', border: '1px solid var(--border)' }}
+                            >
+                              Tutup
+                            </button>
+                          </div>
+                        )}
                         className="p-2 rounded-lg"
                         style={{ background: 'var(--info-dim)', color: 'var(--info)' }}
                         title="Lihat bukti"
