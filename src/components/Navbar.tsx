@@ -28,21 +28,21 @@ export default function Navbar() {
           <a
             href="#fitur"
             className="text-sm transition-colors hover:text-white"
-            style={{ color: 'var(--muted)' }}
+            style={{ color: 'var(--muted-foreground)' }}
           >
             Fitur
           </a>
           <a
             href="#cara-kerja"
             className="text-sm transition-colors hover:text-white"
-            style={{ color: 'var(--muted)' }}
+            style={{ color: 'var(--muted-foreground)' }}
           >
             Cara Kerja
           </a>
           <a
             href="#keamanan"
             className="text-sm transition-colors hover:text-white"
-            style={{ color: 'var(--muted)' }}
+            style={{ color: 'var(--muted-foreground)' }}
           >
             Keamanan
           </a>
@@ -53,7 +53,7 @@ export default function Navbar() {
           <a
             href="#"
             className="text-sm font-medium transition-colors hover:text-white"
-            style={{ color: 'var(--muted)' }}
+            style={{ color: 'var(--muted-foreground)' }}
           >
             Masuk
           </a>
@@ -85,17 +85,17 @@ export default function Navbar() {
           className="md:hidden px-4 pb-4 pt-2 flex flex-col gap-3"
           style={{ background: 'rgba(11, 17, 32, 0.95)', borderBottom: '1px solid var(--border)' }}
         >
-          <a href="#fitur" className="text-sm py-2" style={{ color: 'var(--muted)' }} onClick={() => setMobileOpen(false)}>
+          <a href="#fitur" className="text-sm py-2" style={{ color: 'var(--muted-foreground)' }} onClick={() => setMobileOpen(false)}>
             Fitur
           </a>
-          <a href="#cara-kerja" className="text-sm py-2" style={{ color: 'var(--muted)' }} onClick={() => setMobileOpen(false)}>
+          <a href="#cara-kerja" className="text-sm py-2" style={{ color: 'var(--muted-foreground)' }} onClick={() => setMobileOpen(false)}>
             Cara Kerja
           </a>
-          <a href="#keamanan" className="text-sm py-2" style={{ color: 'var(--muted)' }} onClick={() => setMobileOpen(false)}>
+          <a href="#keamanan" className="text-sm py-2" style={{ color: 'var(--muted-foreground)' }} onClick={() => setMobileOpen(false)}>
             Keamanan
           </a>
           <div className="flex flex-col gap-2 pt-2" style={{ borderTop: '1px solid var(--border)' }}>
-            <a href="#" className="text-sm font-medium py-2" style={{ color: 'var(--muted)' }}>
+            <a href="#" className="text-sm font-medium py-2" style={{ color: 'var(--muted-foreground)' }}>
               Masuk
             </a>
             <Button

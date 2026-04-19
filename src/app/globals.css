@@ -46,14 +46,10 @@
 
 :root {
   --radius: 0.625rem;
-  /* JokiTugas Dark Theme */
+  /* JokiTugas Custom Variables */
   --bg: #0B1120;
   --bg2: #111927;
-  --card: #162032;
-  --border: #243352;
   --fg: #E8ECF1;
-  --muted: #7B8FA8;
-  --accent: #00D68F;
   --accent-dim: rgba(0,214,143,0.12);
   /* shadcn overrides */
   --background: #0B1120;
@@ -162,5 +158,5 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--muted);
+  background: var(--muted-foreground);
 }

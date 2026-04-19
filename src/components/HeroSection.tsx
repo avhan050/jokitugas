@@ -30,7 +30,7 @@ export default function HeroSection() {
             </h1>
 
             {/* Description */}
-            <p className="text-base sm:text-lg max-w-lg" style={{ color: 'var(--muted)' }}>
+            <p className="text-base sm:text-lg max-w-lg" style={{ color: 'var(--muted-foreground)' }}>
               Dapatkan bantuan tugas dari ribuan pengerja profesional. Transaksi aman dengan sistem escrow, hasil terjamin, dan deadline terjaga.
             </p>
 
@@ -94,7 +94,7 @@ export default function HeroSection() {
               </div>
               <div>
                 <p className="text-sm font-medium" style={{ color: 'var(--fg)' }}>Dipercaya 2,000+ mahasiswa</p>
-                <p className="text-xs" style={{ color: 'var(--muted)' }}>dari seluruh Indonesia</p>
+                <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>dari seluruh Indonesia</p>
               </div>
             </div>
           </div>
@@ -113,7 +113,7 @@ export default function HeroSection() {
                 {/* Card Header */}
                 <div className="flex items-center justify-between mb-5">
                   <div>
-                    <p className="text-xs font-medium" style={{ color: 'var(--muted)' }}>Total Pendapatan</p>
+                    <p className="text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>Total Pendapatan</p>
                     <p className="text-2xl font-bold" style={{ color: 'var(--fg)', fontFamily: 'var(--font-space-grotesk)' }}>
                       Rp 4.250.000
                     </p>
@@ -136,7 +136,7 @@ export default function HeroSection() {
                       </div>
                       <div>
                         <p className="text-sm font-medium" style={{ color: 'var(--fg)' }}>Analisis Data Python</p>
-                        <p className="text-xs" style={{ color: 'var(--muted)' }}>Deadline 2 hari</p>
+                        <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Deadline 2 hari</p>
                       </div>
                     </div>
                     <span className="text-sm font-semibold" style={{ color: 'var(--accent)' }}>Rp 350.000</span>
@@ -153,7 +153,7 @@ export default function HeroSection() {
                       </div>
                       <div>
                         <p className="text-sm font-medium" style={{ color: 'var(--fg)' }}>Kalkulus Lanjut</p>
-                        <p className="text-xs" style={{ color: 'var(--muted)' }}>Selesai</p>
+                        <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Selesai</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5">
@@ -173,7 +173,7 @@ export default function HeroSection() {
                       </div>
                       <div>
                         <p className="text-sm font-medium" style={{ color: 'var(--fg)' }}>Makalah Ekonomi</p>
-                        <p className="text-xs" style={{ color: 'var(--muted)' }}>Deadline 5 hari</p>
+                        <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Deadline 5 hari</p>
                       </div>
                     </div>
                     <span className="text-sm font-semibold" style={{ color: 'var(--accent)' }}>Rp 200.000</span>

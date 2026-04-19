@@ -47,7 +47,7 @@ export default function StatsSection() {
                 <p className="text-xl sm:text-2xl font-bold" style={{ fontFamily: 'var(--font-space-grotesk)', color: 'var(--fg)' }}>
                   {stat.value}
                 </p>
-                <p className="text-xs sm:text-sm" style={{ color: 'var(--muted)' }}>
+                <p className="text-xs sm:text-sm" style={{ color: 'var(--muted-foreground)' }}>
                   {stat.label}
                 </p>
               </div>

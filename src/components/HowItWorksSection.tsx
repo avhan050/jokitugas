@@ -40,7 +40,7 @@ export default function HowItWorksSection() {
             >
               Semudah 3 Langkah
             </h2>
-            <p className="text-base mb-10" style={{ color: 'var(--muted)' }}>
+            <p className="text-base mb-10" style={{ color: 'var(--muted-foreground)' }}>
               Proses yang simpel dan transparan dari awal hingga akhir.
             </p>
 
@@ -73,7 +73,7 @@ export default function HowItWorksSection() {
                     >
                       {step.title}
                     </h3>
-                    <p className="text-sm leading-relaxed" style={{ color: 'var(--muted)' }}>
+                    <p className="text-sm leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
                       {step.description}
                     </p>
                   </div>
@@ -97,7 +97,7 @@ export default function HowItWorksSection() {
               >
                 Bergabung dengan JokiTugas
               </h3>
-              <p className="text-sm mb-6" style={{ color: 'var(--muted)' }}>
+              <p className="text-sm mb-6" style={{ color: 'var(--muted-foreground)' }}>
                 Daftar gratis dan mulai selesaikan atau kerjakan tugas hari ini.
               </p>
 
@@ -115,9 +115,9 @@ export default function HowItWorksSection() {
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-semibold" style={{ color: 'var(--fg)' }}>Saya butuh bantuan tugas</p>
-                    <p className="text-xs" style={{ color: 'var(--muted)' }}>Posting tugas & temukan joki terbaik</p>
+                    <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Posting tugas & temukan joki terbaik</p>
                   </div>
-                  <ArrowRight className="w-4 h-4" style={{ color: 'var(--muted)' }} />
+                  <ArrowRight className="w-4 h-4" style={{ color: 'var(--muted-foreground)' }} />
                 </div>
 
                 {/* Worker Option */}
@@ -133,9 +133,9 @@ export default function HowItWorksSection() {
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-semibold" style={{ color: 'var(--fg)' }}>Saya ingin jadi Joki</p>
-                    <p className="text-xs" style={{ color: 'var(--muted)' }}>Kerjakan tugas & dapatkan penghasilan</p>
+                    <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Kerjakan tugas & dapatkan penghasilan</p>
                   </div>
-                  <ArrowRight className="w-4 h-4" style={{ color: 'var(--muted)' }} />
+                  <ArrowRight className="w-4 h-4" style={{ color: 'var(--muted-foreground)' }} />
                 </div>
               </div>
 
@@ -146,7 +146,7 @@ export default function HowItWorksSection() {
                 Daftar Akun Gratis
               </Button>
 
-              <p className="text-xs text-center mt-4" style={{ color: 'var(--muted)' }}>
+              <p className="text-xs text-center mt-4" style={{ color: 'var(--muted-foreground)' }}>
                 Sudah punya akun?{' '}
                 <a href="#" className="font-medium" style={{ color: 'var(--accent)' }}>
                   Masuk di sini

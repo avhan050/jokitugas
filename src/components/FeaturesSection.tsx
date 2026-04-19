@@ -44,7 +44,7 @@ export default function FeaturesSection() {
           >
             Kenapa Memilih JokiTugas?
           </h2>
-          <p className="text-base max-w-2xl mx-auto" style={{ color: 'var(--muted)' }}>
+          <p className="text-base max-w-2xl mx-auto" style={{ color: 'var(--muted-foreground)' }}>
             Platform terpercaya dengan sistem keamanan terbaik untuk melindungi setiap transaksi Anda.
           </p>
         </div>
@@ -78,7 +78,7 @@ export default function FeaturesSection() {
               >
                 {feature.title}
               </h3>
-              <p className="text-sm leading-relaxed mb-4" style={{ color: 'var(--muted)' }}>
+              <p className="text-sm leading-relaxed mb-4" style={{ color: 'var(--muted-foreground)' }}>
                 {feature.description}
               </p>
               <div className="flex items-center gap-1 text-sm font-medium transition-colors group-hover:gap-2"
