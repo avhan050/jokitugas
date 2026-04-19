@@ -1,0 +1,2191 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JokiTugas — Platform Jasa Joki Tugas</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  :root {
+    --bg: #0B1120;
+    --bg2: #111927;
+    --card: #162032;
+    --card-hover: #1C2A42;
+    --border: #243352;
+    --fg: #E8ECF1;
+    --muted: #7B8FA8;
+    --accent: #00D68F;
+    --accent-dim: rgba(0,214,143,0.12);
+    --gold: #FFB020;
+    --gold-dim: rgba(255,176,32,0.12);
+    --danger: #FF4757;
+    --danger-dim: rgba(255,71,87,0.12);
+    --info: #0095FF;
+    --info-dim: rgba(0,149,255,0.12);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--fg); overflow-x:hidden; }
+  h1,h2,h3,h4,h5 { font-family:'Space Grotesk',sans-serif; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width:6px; }
+  ::-webkit-scrollbar-track { background:var(--bg2); }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+  /* Animasi */
+  @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes slideInRight { from{opacity:0;transform:translateX(30px)} to{opacity:1;transform:translateX(0)} }
+  @keyframes pulse-glow { 0%,100%{box-shadow:0 0 20px rgba(0,214,143,0.15)} 50%{box-shadow:0 0 35px rgba(0,214,143,0.3)} }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+  @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+  @keyframes toast-in { from{transform:translateX(120%);opacity:0} to{transform:translateX(0);opacity:1} }
+  @keyframes toast-out { from{transform:translateX(0);opacity:1} to{transform:translateX(120%);opacity:0} }
+
+  .animate-in { animation: fadeIn 0.4s ease both; }
+  .animate-slide { animation: slideInRight 0.4s ease both; }
+
+  /* Auth background */
+  .auth-bg {
+    background: var(--bg);
+    position: relative;
+    overflow: hidden;
+  }
+  .auth-bg::before {
+    content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+    background: radial-gradient(ellipse at 30% 20%, rgba(0,214,143,0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, rgba(0,149,255,0.05) 0%, transparent 50%);
+    animation: float 8s ease-in-out infinite;
+  }
+
+  /* Sidebar */
+  .sidebar { width:260px; min-height:100vh; background:var(--bg2); border-right:1px solid var(--border); position:fixed; left:0; top:0; z-index:40; transition:transform 0.3s; }
+  .sidebar-link { display:flex; align-items:center; gap:12px; padding:12px 20px; border-radius:10px; margin:2px 12px; cursor:pointer; transition:all 0.2s; color:var(--muted); font-weight:500; }
+  .sidebar-link:hover { background:var(--card); color:var(--fg); }
+  .sidebar-link.active { background:var(--accent-dim); color:var(--accent); }
+  .sidebar-link i { width:20px; text-align:center; }
+
+  /* Main area */
+  .main-area { margin-left:260px; min-height:100vh; }
+
+  /* Cards */
+  .stat-card {
+    background:var(--card); border:1px solid var(--border); border-radius:16px; padding:24px;
+    transition:all 0.3s; position:relative; overflow:hidden;
+  }
+  .stat-card:hover { border-color:var(--accent); transform:translateY(-2px); }
+  .stat-card .icon-wrap { width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px; }
+
+  /* Task card */
+  .task-card {
+    background:var(--card); border:1px solid var(--border); border-radius:14px; padding:20px;
+    transition:all 0.3s; cursor:pointer;
+  }
+  .task-card:hover { border-color:var(--accent); transform:translateY(-2px); box-shadow:0 8px 30px rgba(0,214,143,0.08); }
+
+  /* Badges */
+  .badge { padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; display:inline-flex; align-items:center; gap:4px; }
+  .badge-open { background:var(--accent-dim); color:var(--accent); }
+  .badge-progress { background:var(--info-dim); color:var(--info); }
+  .badge-review { background:var(--gold-dim); color:var(--gold); }
+  .badge-done { background:rgba(0,214,143,0.15); color:#00D68F; }
+  .badge-cancelled { background:var(--danger-dim); color:var(--danger); }
+
+  /* Category badges */
+  .cat-badge { padding:3px 10px; border-radius:6px; font-size:11px; font-weight:600; background:rgba(0,149,255,0.1); color:var(--info); }
+
+  /* Buttons */
+  .btn-primary { background:var(--accent); color:#0B1120; font-weight:700; padding:10px 24px; border-radius:10px; border:none; cursor:pointer; transition:all 0.2s; font-size:14px; }
+  .btn-primary:hover { background:#00F0A0; transform:translateY(-1px); box-shadow:0 4px 20px rgba(0,214,143,0.3); }
+  .btn-secondary { background:var(--card); color:var(--fg); font-weight:600; padding:10px 24px; border-radius:10px; border:1px solid var(--border); cursor:pointer; transition:all 0.2s; font-size:14px; }
+  .btn-secondary:hover { border-color:var(--accent); }
+  .btn-danger { background:var(--danger-dim); color:var(--danger); font-weight:600; padding:10px 24px; border-radius:10px; border:1px solid transparent; cursor:pointer; transition:all 0.2s; font-size:14px; }
+  .btn-danger:hover { background:var(--danger); color:#fff; }
+  .btn-gold { background:var(--gold); color:#0B1120; font-weight:700; padding:10px 24px; border-radius:10px; border:none; cursor:pointer; transition:all 0.2s; font-size:14px; }
+  .btn-gold:hover { background:#FFD060; }
+
+  /* Form inputs */
+  .form-input {
+    width:100%; background:var(--bg); border:1px solid var(--border); border-radius:10px;
+    padding:12px 16px; color:var(--fg); font-size:14px; outline:none; transition:border-color 0.2s;
+    font-family:'DM Sans',sans-serif;
+  }
+  .form-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-dim); }
+  .form-input::placeholder { color:var(--muted); }
+  select.form-input { cursor:pointer; appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237B8FA8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center; }
+  textarea.form-input { resize:vertical; min-height:100px; }
+
+  /* Modal */
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); z-index:100; display:flex; align-items:center; justify-content:center; padding:20px; }
+  .modal-content { background:var(--card); border:1px solid var(--border); border-radius:20px; max-width:560px; width:100%; max-height:85vh; overflow-y:auto; padding:32px; animation:fadeIn 0.3s ease; }
+
+  /* Toast */
+  .toast-container { position:fixed; top:20px; right:20px; z-index:200; display:flex; flex-direction:column; gap:10px; }
+  .toast { padding:14px 20px; border-radius:12px; font-weight:500; font-size:14px; animation:toast-in 0.4s ease; min-width:280px; display:flex; align-items:center; gap:10px; box-shadow:0 8px 30px rgba(0,0,0,0.3); }
+  .toast.out { animation:toast-out 0.3s ease forwards; }
+  .toast-success { background:#0D2E1F; border:1px solid #00D68F; color:var(--accent); }
+  .toast-error { background:#2E0D14; border:1px solid var(--danger); color:var(--danger); }
+  .toast-info { background:#0D1A2E; border:1px solid var(--info); color:var(--info); }
+  .toast-warning { background:#2E250D; border:1px solid var(--gold); color:var(--gold); }
+
+  /* Rating stars */
+  .star { cursor:pointer; font-size:24px; color:var(--border); transition:color 0.15s; }
+  .star.active { color:var(--gold); }
+
+  /* Progress steps */
+  .step-line { height:3px; flex:1; background:var(--border); border-radius:2px; position:relative; overflow:hidden; }
+  .step-line.filled { background:var(--accent); }
+  .step-dot { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; border:2px solid var(--border); background:var(--bg2); color:var(--muted); transition:all 0.3s; }
+  .step-dot.active { border-color:var(--accent); background:var(--accent-dim); color:var(--accent); }
+  .step-dot.done { border-color:var(--accent); background:var(--accent); color:#0B1120; }
+
+  /* Shimmer loading */
+  .shimmer { background:linear-gradient(90deg,var(--card) 25%,var(--card-hover) 50%,var(--card) 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; }
+
+  /* Responsive */
+  @media(max-width:768px){
+    .sidebar { transform:translateX(-100%); }
+    .sidebar.open { transform:translateX(0); }
+    .main-area { margin-left:0; }
+    .mobile-toggle { display:flex !important; }
+  }
+
+  /* Glow orb */
+  .glow-orb {
+    position:absolute; border-radius:50%; filter:blur(80px); pointer-events:none; opacity:0.4;
+  }
+</style>
+</head>
+<body>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ============ AUTH PAGE ============ -->
+<div id="authPage" class="auth-bg min-h-screen flex items-center justify-center p-4">
+  <div class="relative z-10 w-full max-w-md">
+    <!-- Logo -->
+    <div class="text-center mb-8 animate-in">
+      <div class="inline-flex items-center gap-3 mb-4">
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl font-bold" style="background:var(--accent);color:#0B1120;">
+          <i class="fas fa-bolt"></i>
+        </div>
+        <h1 class="text-3xl font-bold" style="color:var(--accent);">JokiTugas</h1>
+      </div>
+      <p style="color:var(--muted);" class="text-sm">Platform jasa joki tugas terpercaya dengan pembayaran aman</p>
+    </div>
+
+    <!-- Auth Card -->
+    <div class="animate-in" style="animation-delay:0.1s;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:32px;">
+      <!-- Tab toggle -->
+      <div class="flex rounded-xl p-1 mb-6" style="background:var(--bg);">
+        <button id="tabLogin" onclick="switchAuthTab('login')" class="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all" style="background:var(--accent);color:#0B1120;">Masuk</button>
+        <button id="tabRegister" onclick="switchAuthTab('register')" class="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all" style="color:var(--muted);">Daftar</button>
+      </div>
+
+      <!-- Login Form -->
+      <div id="loginForm">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold mb-2" style="color:var(--muted);">EMAIL</label>
+            <input type="email" id="loginEmail" class="form-input" placeholder="nama@email.com">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold mb-2" style="color:var(--muted);">PASSWORD</label>
+            <input type="password" id="loginPassword" class="form-input" placeholder="Masukkan password">
+          </div>
+          <button onclick="handleLogin()" class="btn-primary w-full py-3 text-base mt-2">Masuk</button>
+        </div>
+        <div class="mt-4 p-3 rounded-lg text-xs" style="background:var(--accent-dim);color:var(--accent);">
+          <i class="fas fa-info-circle mr-1"></i> Demo: gunakan akun yang sudah tersedia atau daftar baru
+        </div>
+      </div>
+
+      <!-- Register Form -->
+      <div id="registerForm" style="display:none;">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold mb-2" style="color:var(--muted);">NAMA LENGKAP</label>
+            <input type="text" id="regName" class="form-input" placeholder="Nama lengkap">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold mb-2" style="color:var(--muted);">EMAIL</label>
+            <input type="email" id="regEmail" class="form-input" placeholder="nama@email.com">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold mb-2" style="color:var(--muted);">PASSWORD</label>
+            <input type="password" id="regPassword" class="form-input" placeholder="Minimal 6 karakter">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold mb-2" style="color:var(--muted);">PERAN</label>
+            <select id="regRole" class="form-input">
+              <option value="client">Pemberi Tugas (Client)</option>
+              <option value="worker">Pengerja Tugas (Joki)</option>
+            </select>
+          </div>
+          <button onclick="handleRegister()" class="btn-primary w-full py-3 text-base mt-2">Daftar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick access -->
+    <div class="animate-in mt-6 text-center" style="animation-delay:0.2s;">
+      <p class="text-xs mb-3" style="color:var(--muted);">Akses Cepat Demo:</p>
+      <div class="flex gap-3 justify-center flex-wrap">
+        <button onclick="quickLogin('client@demo.com')" class="text-xs px-4 py-2 rounded-lg font-semibold" style="background:var(--accent-dim);color:var(--accent);">
+          <i class="fas fa-user-tie mr-1"></i> Client Demo
+        </button>
+        <button onclick="quickLogin('worker@demo.com')" class="text-xs px-4 py-2 rounded-lg font-semibold" style="background:var(--info-dim);color:var(--info);">
+          <i class="fas fa-laptop-code mr-1"></i> Joki Demo
+        </button>
+        <button onclick="quickLogin('admin@joki.com')" class="text-xs px-4 py-2 rounded-lg font-semibold" style="background:var(--danger-dim);color:var(--danger);">
+          <i class="fas fa-user-shield mr-1"></i> Admin Demo
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MAIN APP ============ -->
+<div id="appPage" style="display:none;">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="p-5 border-b" style="border-color:var(--border);">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold" style="background:var(--accent);color:#0B1120;">
+          <i class="fas fa-bolt"></i>
+        </div>
+        <h2 class="text-lg font-bold" style="color:var(--accent);">JokiTugas</h2>
+      </div>
+    </div>
+
+    <nav class="py-4" id="sidebarNav">
+      <!-- Diisi oleh JS -->
+    </nav>
+
+    <div class="absolute bottom-0 left-0 right-0 p-4 border-t" style="border-color:var(--border);">
+      <div class="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all hover:bg-[var(--card)]" onclick="logout()">
+        <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background:var(--danger-dim);color:var(--danger);">
+          <i class="fas fa-sign-out-alt text-sm"></i>
+        </div>
+        <div>
+          <div class="text-sm font-semibold">Keluar</div>
+          <div class="text-xs" style="color:var(--muted);">Logout akun</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <div class="main-area">
+    <!-- Top bar -->
+    <header class="sticky top-0 z-30 px-6 py-4 flex items-center justify-between" style="background:rgba(11,17,32,0.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);">
+      <div class="flex items-center gap-4">
+        <button class="mobile-toggle hidden w-10 h-10 rounded-lg items-center justify-center" style="background:var(--card);border:1px solid var(--border);" onclick="toggleSidebar()">
+          <i class="fas fa-bars" style="color:var(--muted);"></i>
+        </button>
+        <h2 class="text-lg font-bold" id="pageTitle">Dashboard</h2>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2 px-4 py-2 rounded-xl" style="background:var(--gold-dim);border:1px solid rgba(255,176,32,0.2);">
+          <i class="fas fa-wallet text-sm" style="color:var(--gold);"></i>
+          <span class="text-sm font-bold" style="color:var(--gold);" id="topBarBalance">Rp 0</span>
+        </div>
+        <div class="flex items-center gap-3 cursor-pointer" onclick="navigateTo('profile')">
+          <div class="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold" id="topBarAvatar" style="background:var(--accent-dim);color:var(--accent);">C</div>
+          <div class="hidden sm:block">
+            <div class="text-sm font-semibold" id="topBarName">User</div>
+            <div class="text-xs" style="color:var(--muted);" id="topBarRole">Client</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Page content -->
+    <main class="p-6" id="pageContent">
+      <!-- Diisi oleh JS -->
+    </main>
+  </div>
+</div>
+
+<!-- ============ MODAL ============ -->
+<div id="modalOverlay" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeModal()">
+  <div class="modal-content" id="modalContent"></div>
+</div>
+
+<script>
+// ========================================
+// DATA LAYER — localStorage persistence
+// ========================================
+
+// Seed data agar aplikasi tidak kosong saat pertama kali dibuka
+function seedData() {
+  const users = getData('users');
+  const adminSettings = localStorage.getItem('jt_admin_settings');
+
+  // Ensure Admin user exists
+  if (!users.find(u => u.isAdmin)) {
+    users.push({ id:'admin', name:'Admin JokiTugas', email:'admin@joki.com', password:'admin123', role:'admin', balance:0, rating:5.0, completedJobs:0, createdAt:'2024-01-01', isAdmin:true });
+    setData('users', users);
+  }
+
+  // Ensure Admin settings exist
+  if (!adminSettings) {
+    const defaultSettings = {
+      bank_name: 'Bank Central Asia (BCA)',
+      bank_account: '1234567890',
+      bank_owner: 'PT Joki Tugas Indonesia',
+      e_wallet: 'DANA/OVO/GoPay: 081234567890 (a.n. JokiTugas)'
+    };
+    localStorage.setItem('jt_admin_settings', JSON.stringify(defaultSettings));
+  }
+
+  if (localStorage.getItem('jt_seeded')) return;
+
+  const initialUsers = [
+    { id:'u1', name:'Andi Pratama', email:'client@demo.com', password:'demo123', role:'client', balance:2500000, rating:4.8, completedJobs:12, createdAt:'2024-12-01' },
+    { id:'u2', name:'Budi Santoso', email:'worker@demo.com', password:'demo123', role:'worker', balance:1750000, rating:4.9, completedJobs:28, createdAt:'2024-11-15' },
+    { id:'u3', name:'Citra Dewi', email:'citra@demo.com', password:'demo123', role:'client', balance:900000, rating:4.5, completedJobs:5, createdAt:'2025-01-10' },
+    { id:'u4', name:'Dimas K.', email:'dimas@demo.com', password:'demo123', role:'worker', balance:3200000, rating:4.7, completedJobs:35, createdAt:'2024-10-20' },
+  ];
+  
+  // Add admin if not in initial list but we already handled it above for existing users.
+  // For fresh start, we combine them.
+  const allUsers = [...initialUsers, { id:'admin', name:'Admin JokiTugas', email:'admin@joki.com', password:'admin123', role:'admin', balance:0, rating:5.0, completedJobs:0, createdAt:'2024-01-01', isAdmin:true }];
+
+  const tasks = [
+    { id:'t1', clientId:'u1', title:'Tugas Kalkulus II — Integral Tak Tentu', description:'Kerjakan 15 soal integral tak tentu dari buku Thomas Calculus bab 5. Tulis langkah penyelesaian lengkap.', category:'Matematika', deadline:'2025-07-20', budget:150000, status:'open', workerId:null, createdAt:'2025-07-10', completedAt:null, clientRating:null, workerRating:null, escrowHeld:true },
+    { id:'t2', clientId:'u1', title:'Laporan Praktikum Fisika Dasar', description:'Buat laporan praktikum gerak parabola lengkap dengan analisis data, grafik, dan kesimpulan. Format PDF.', category:'Fisika', deadline:'2025-07-18', budget:200000, status:'in_progress', workerId:'u2', createdAt:'2025-07-08', completedAt:null, clientRating:null, workerRating:null, escrowHeld:true },
+    { id:'t3', clientId:'u3', title:'Coding Python — Analisis Data COVID', description:'Buat script Python untuk analisis data COVID-19 menggunakan pandas dan matplotlib. Sertakan visualisasi.', category:'Programming', deadline:'2025-07-22', budget:300000, status:'under_review', workerId:'u4', createdAt:'2025-07-05', completedAt:null, clientRating:null, workerRating:null, escrowHeld:true, submissionNote: 'Script Python menggunakan Pandas & Matplotlib.' },
+    { id:'t4', clientId:'u3', title:'Essay Sastra Indonesia — Analisis Puisi', description:'Buat essay 2000 kata menganalisis puisi karya WS Rendra. Minimal 5 referensi akademik.', category:'Bahasa', deadline:'2025-07-25', budget:125000, status:'open', workerId:null, createdAt:'2025-07-12', completedAt:null, clientRating:null, workerRating:null, escrowHeld:true },
+    { id:'t5', clientId:'u1', title:'Desain Poster Event Kampus', description:'Desain poster A3 untuk event tech talk kampus dengan tema cyberpunk. Format AI/PSD + PNG.', category:'Desain', deadline:'2025-07-15', budget:175000, status:'completed', workerId:'u2', createdAt:'2025-07-01', completedAt:'2025-07-14', clientRating:5, workerRating:5, escrowHeld:false, submissionNote: 'Link desain Canva: https://canva.com/design/...' },
+  ];
+
+  const transactions = [
+    { id:'tr1', userId:'u1', type:'topup', amount:3000000, taskId:null, createdAt:'2025-07-01', desc:'Top up saldo', status:'approved' },
+    { id:'tr2', userId:'u1', type:'escrow', amount:-150000, taskId:'t1', createdAt:'2025-07-10', desc:'Escrow: Tugas Kalkulus II', status:'approved' },
+    { id:'tr3', userId:'u1', type:'escrow', amount:-200000, taskId:'t2', createdAt:'2025-07-08', desc:'Escrow: Laporan Praktikum', status:'approved' },
+    { id:'tr4', userId:'u2', type:'topup', amount:2000000, createdAt:'2025-06-25', desc:'Top up saldo', status:'approved' },
+    { id:'tr5', userId:'u2', type:'earning', amount:175000, taskId:'t5', createdAt:'2025-07-14', desc:'Pembayaran: Desain Poster', status:'approved' },
+    { id:'tr6', userId:'u3', type:'topup', amount:1500000, createdAt:'2025-07-03', desc:'Top up saldo', status:'approved' },
+    { id:'tr7', userId:'u3', type:'escrow', amount:-300000, taskId:'t3', createdAt:'2025-07-05', desc:'Escrow: Coding Python', status:'approved' },
+    { id:'tr8', userId:'u4', type:'topup', amount:5000000, createdAt:'2025-06-15', desc:'Top up saldo', status:'approved' },
+  ];
+
+  setData('users', allUsers);
+  setData('tasks', tasks);
+  setData('transactions', transactions);
+  localStorage.setItem('jt_seeded', 'true');
+}
+
+// CRUD helpers
+function getData(key) { return JSON.parse(localStorage.getItem('jt_'+key) || '[]'); }
+function setData(key, data) { localStorage.setItem('jt_'+key, JSON.stringify(data)); }
+function genId() { return 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2,6); }
+
+// ========================================
+// STATE
+// ========================================
+let currentUser = null;
+let currentPage = 'dashboard';
+
+// ========================================
+// AUTH
+// ========================================
+function switchAuthTab(tab) {
+  const loginBtn = document.getElementById('tabLogin');
+  const regBtn = document.getElementById('tabRegister');
+  const loginForm = document.getElementById('loginForm');
+  const regForm = document.getElementById('registerForm');
+  if (tab === 'login') {
+    loginBtn.style.background = 'var(--accent)'; loginBtn.style.color = '#0B1120';
+    regBtn.style.background = 'transparent'; regBtn.style.color = 'var(--muted)';
+    loginForm.style.display = 'block'; regForm.style.display = 'none';
+  } else {
+    regBtn.style.background = 'var(--accent)'; regBtn.style.color = '#0B1120';
+    loginBtn.style.background = 'transparent'; loginBtn.style.color = 'var(--muted)';
+    loginForm.style.display = 'none'; regForm.style.display = 'block';
+  }
+}
+
+function handleLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  if (!email || !password) return toast('Isi email dan password', 'error');
+  const users = getData('users');
+  const user = users.find(u => u.email === email && u.password === password);
+  if (!user) return toast('Email atau password salah', 'error');
+  currentUser = user;
+  localStorage.setItem('jt_session', user.id);
+  showApp();
+  toast('Selamat datang, ' + user.name + '!', 'success');
+}
+
+function handleRegister() {
+  const name = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const password = document.getElementById('regPassword').value;
+  const role = document.getElementById('regRole').value;
+  if (!name || !email || !password) return toast('Semua field wajib diisi', 'error');
+  if (password.length < 6) return toast('Password minimal 6 karakter', 'error');
+  const users = getData('users');
+  if (users.find(u => u.email === email)) return toast('Email sudah terdaftar', 'error');
+  const newUser = { id:genId(), name, email, password, role, balance:500000, rating:0, completedJobs:0, createdAt:new Date().toISOString().split('T')[0] };
+  users.push(newUser);
+  setData('users', users);
+  // Bonus saldo awal
+  const transactions = getData('transactions');
+  transactions.push({ id:genId(), userId:newUser.id, type:'topup', amount:500000, taskId:null, createdAt:new Date().toISOString().split('T')[0], desc:'Bonus saldo awal' });
+  setData('transactions', transactions);
+  currentUser = newUser;
+  localStorage.setItem('jt_session', newUser.id);
+  showApp();
+  toast('Registrasi berhasil! Bonus Rp 500.000 saldo awal', 'success');
+}
+
+function quickLogin(email) {
+  const users = getData('users');
+  const user = users.find(u => u.email === email);
+  if (!user) return toast('Akun demo tidak ditemukan', 'error');
+  currentUser = user;
+  localStorage.setItem('jt_session', user.id);
+  showApp();
+  toast('Selamat datang, ' + user.name + '!', 'success');
+}
+
+function logout() {
+  currentUser = null;
+  localStorage.removeItem('jt_session');
+  document.getElementById('appPage').style.display = 'none';
+  document.getElementById('authPage').style.display = 'flex';
+}
+
+// ========================================
+// APP INIT
+// ========================================
+function showApp() {
+  document.getElementById('authPage').style.display = 'none';
+  document.getElementById('appPage').style.display = 'block';
+  updateTopBar();
+  buildSidebar();
+  navigateTo('dashboard');
+}
+
+function updateTopBar() {
+  if (!currentUser) return;
+  // Refresh user data dari storage
+  const users = getData('users');
+  currentUser = users.find(u => u.id === currentUser.id) || currentUser;
+
+  let balanceToShow = currentUser.balance;
+  let roleLabel = "";
+
+  if (currentUser.isAdmin) {
+    const transactions = getData('transactions');
+    balanceToShow = transactions.filter(t => t.type === 'fee').reduce((s, t) => s + Math.abs(t.amount), 0);
+    roleLabel = "Administrator";
+  } else {
+    roleLabel = currentUser.role === 'client' ? 'Pemberi Tugas' : 'Pengerja Tugas';
+  }
+
+  document.getElementById('topBarBalance').textContent = formatRupiah(balanceToShow);
+  document.getElementById('topBarName').textContent = currentUser.name;
+  document.getElementById('topBarRole').textContent = roleLabel;
+  document.getElementById('topBarAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+  
+  if (currentUser.isAdmin) {
+    document.getElementById('topBarAvatar').style.background = 'var(--danger-dim)';
+    document.getElementById('topBarAvatar').style.color = 'var(--danger)';
+  } else if (currentUser.role === 'worker') {
+    document.getElementById('topBarAvatar').style.background = 'var(--info-dim)';
+    document.getElementById('topBarAvatar').style.color = 'var(--info)';
+  } else {
+    document.getElementById('topBarAvatar').style.background = 'var(--accent-dim)';
+    document.getElementById('topBarAvatar').style.color = 'var(--accent)';
+  }
+}
+
+function buildSidebar() {
+  const nav = document.getElementById('sidebarNav');
+  let links = [];
+  if (currentUser.isAdmin) {
+    links = [
+      { id:'dashboard', icon:'fa-th-large', label:'Dashboard' },
+      { id:'admin_panel', icon:'fa-user-shield', label:'Panel Admin' },
+      { id:'marketplace', icon:'fa-store', label:'Marketplace' },
+      { id:'transactions', icon:'fa-exchange-alt', label:'Semua Transaksi' },
+      { id:'profile', icon:'fa-user-circle', label:'Profil' },
+    ];
+  } else if (currentUser.role === 'client') {
+    links = [
+      { id:'dashboard', icon:'fa-th-large', label:'Dashboard' },
+      { id:'mytasks', icon:'fa-clipboard-list', label:'Tugas Saya' },
+      { id:'posttask', icon:'fa-plus-circle', label:'Posting Tugas' },
+      { id:'marketplace', icon:'fa-store', label:'Marketplace' },
+      { id:'wallet', icon:'fa-wallet', label:'Dompet' },
+      { id:'transactions', icon:'fa-exchange-alt', label:'Transaksi' },
+      { id:'profile', icon:'fa-user-circle', label:'Profil' },
+    ];
+  } else {
+    links = [
+      { id:'dashboard', icon:'fa-th-large', label:'Dashboard' },
+      { id:'marketplace', icon:'fa-store', label:'Cari Tugas' },
+      { id:'mywork', icon:'fa-hard-hat', label:'Tugas Dikerjakan' },
+      { id:'wallet', icon:'fa-wallet', label:'Dompet' },
+      { id:'transactions', icon:'fa-exchange-alt', label:'Transaksi' },
+      { id:'profile', icon:'fa-user-circle', label:'Profil' },
+    ];
+  }
+  nav.innerHTML = links.map(l => `
+    <div class="sidebar-link ${currentPage===l.id?'active':''}" onclick="navigateTo('${l.id}')">
+      <i class="fas ${l.icon}"></i> <span>${l.label}</span>
+    </div>
+  `).join('');
+}
+
+function navigateTo(page) {
+  currentPage = page;
+  buildSidebar();
+  const titles = { dashboard:'Dashboard', mytasks:'Tugas Saya', posttask:'Posting Tugas', marketplace:'Marketplace', mywork:'Tugas Dikerjakan', wallet:'Dompet', transactions:'Transaksi', profile:'Profil', admin_panel:'Panel Admin' };
+  document.getElementById('pageTitle').textContent = titles[page] || 'JokiTugas';
+  const content = document.getElementById('pageContent');
+  content.innerHTML = '';
+
+  switch(page) {
+    case 'dashboard': renderDashboard(); break;
+    case 'mytasks': renderMyTasks(); break;
+    case 'posttask': renderPostTask(); break;
+    case 'marketplace': renderMarketplace(); break;
+    case 'mywork': renderMyWork(); break;
+    case 'wallet': renderWallet(); break;
+    case 'transactions': renderTransactions(); break;
+    case 'profile': renderProfile(); break;
+    case 'admin_panel': renderAdminPanel(); break;
+  }
+  // Tutup sidebar mobile
+  document.getElementById('sidebar').classList.remove('open');
+}
+
+// ========================================
+// FORMAT HELPERS
+// ========================================
+function formatRupiah(n) { return 'Rp ' + Number(n).toLocaleString('id-ID'); }
+function formatDate(d) { if(!d) return '-'; const dt=new Date(d); return dt.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}); }
+function statusLabel(s) {
+  const m = { open:'Terbuka', in_progress:'Dikerjakan', under_review:'Ditinjau', completed:'Selesai', cancelled:'Dibatalkan' };
+  const c = { open:'badge-open', in_progress:'badge-progress', under_review:'badge-review', completed:'badge-done', cancelled:'badge-cancelled' };
+  return `<span class="badge ${c[s]||''}">${m[s]||s}</span>`;
+}
+function categoryIcon(cat) {
+  const m = { 'Matematika':'fa-calculator','Fisika':'fa-atom','Kimia':'fa-flask','Biologi':'fa-dna','Bahasa':'fa-book','Programming':'fa-code','Desain':'fa-palette','Penulisan':'fa-pen-fancy','Lainnya':'fa-folder' };
+  return m[cat] || 'fa-folder';
+}
+
+// ========================================
+// TOAST
+// ========================================
+function toast(msg, type='info') {
+  const c = document.getElementById('toastContainer');
+  const icons = { success:'fa-check-circle', error:'fa-exclamation-circle', info:'fa-info-circle', warning:'fa-exclamation-triangle' };
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.innerHTML = `<i class="fas ${icons[type]||icons.info}"></i> ${msg}`;
+  c.appendChild(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 300); }, 3500);
+}
+
+// ========================================
+// MODAL
+// ========================================
+function openModal(html) {
+  document.getElementById('modalContent').innerHTML = html;
+  document.getElementById('modalOverlay').style.display = 'flex';
+}
+function closeModal() {
+  document.getElementById('modalOverlay').style.display = 'none';
+}
+
+// ========================================
+// SIDEBAR TOGGLE (mobile)
+// ========================================
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+// ========================================
+// DASHBOARD
+// ========================================
+function renderDashboard() {
+  const tasks = getData('tasks');
+  const transactions = getData('transactions');
+  const users = getData('users');
+  const content = document.getElementById('pageContent');
+  const isAdmin = currentUser.isAdmin;
+  const isClient = currentUser.role === 'client';
+
+  if (isAdmin) {
+    const totalPlatformRevenue = transactions.filter(t => t.type === 'fee').reduce((s, t) => s + Math.abs(t.amount), 0);
+    const totalUsers = users.length;
+    const totalTasks = tasks.length;
+    const pendingTrans = transactions.filter(t => t.status === 'pending').length;
+
+    content.innerHTML = `
+      <div class="animate-in">
+        <div class="mb-6">
+          <h2 class="text-2xl font-bold mb-1">Halo, Admin!</h2>
+          <p style="color:var(--muted);" class="text-sm">Pantau performa platform JokiTugas hari ini</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div class="stat-card">
+            <div class="flex items-center justify-between mb-3">
+              <div class="icon-wrap" style="background:var(--accent-dim);color:var(--accent);"><i class="fas fa-chart-line"></i></div>
+              <span class="text-xs font-semibold" style="color:var(--muted);">Total Pendapatan (Fee)</span>
+            </div>
+            <div class="text-2xl font-bold">${formatRupiah(totalPlatformRevenue)}</div>
+          </div>
+          <div class="stat-card">
+            <div class="flex items-center justify-between mb-3">
+              <div class="icon-wrap" style="background:var(--info-dim);color:var(--info);"><i class="fas fa-users"></i></div>
+              <span class="text-xs font-semibold" style="color:var(--muted);">Total Pengguna</span>
+            </div>
+            <div class="text-2xl font-bold">${totalUsers}</div>
+          </div>
+          <div class="stat-card">
+            <div class="flex items-center justify-between mb-3">
+              <div class="icon-wrap" style="background:var(--gold-dim);color:var(--gold);"><i class="fas fa-tasks"></i></div>
+              <span class="text-xs font-semibold" style="color:var(--muted);">Total Tugas</span>
+            </div>
+            <div class="text-2xl font-bold">${totalTasks}</div>
+          </div>
+          <div class="stat-card" onclick="navigateTo('admin_panel')" style="cursor:pointer; border-color:${pendingTrans > 0 ? 'var(--gold)' : 'var(--border)'}">
+            <div class="flex items-center justify-between mb-3">
+              <div class="icon-wrap" style="background:${pendingTrans > 0 ? 'var(--gold-dim)' : 'var(--accent-dim)'};color:${pendingTrans > 0 ? 'var(--gold)' : 'var(--accent)'};">
+                <i class="fas fa-clock"></i>
+              </div>
+              <span class="text-xs font-semibold" style="color:var(--muted);">Menunggu Verifikasi</span>
+            </div>
+            <div class="text-2xl font-bold">${pendingTrans}</div>
+          </div>
+        </div>
+
+        <h3 class="text-lg font-bold mb-4">Tugas Terbaru di Platform</h3>
+        <div class="space-y-3">
+          ${tasks.slice(-5).reverse().map((t,i) => `
+            <div class="task-card animate-slide" style="animation-delay:${i*0.05}s;" onclick="showTaskDetail('${t.id}')">
+              <div class="flex items-center justify-between flex-wrap gap-3">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background:var(--info-dim);color:var(--info);">
+                    <i class="fas ${categoryIcon(t.category)}"></i>
+                  </div>
+                  <div>
+                    <div class="font-semibold text-sm">${t.title}</div>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span class="cat-badge">${t.category}</span>
+                      ${statusLabel(t.status)}
+                    </div>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <div class="font-bold" style="color:var(--gold);">${formatRupiah(t.budget)}</div>
+                  <div class="text-xs" style="color:var(--muted);">Oleh: ${users.find(u=>u.id===t.clientId)?.name || 'Unknown'}</div>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  let myTasks;
+  if (isClient) {
+    myTasks = tasks.filter(t => t.clientId === currentUser.id);
+  } else {
+    myTasks = tasks.filter(t => t.workerId === currentUser.id);
+  }
+
+  const openCount = myTasks.filter(t => t.status === 'open').length;
+  const progressCount = myTasks.filter(t => t.status === 'in_progress').length;
+  const reviewCount = myTasks.filter(t => t.status === 'under_review').length;
+  const doneCount = myTasks.filter(t => t.status === 'completed').length;
+  const totalSpent = isClient ? myTasks.filter(t=>t.escrowHeld || t.status==='completed').reduce((s,t)=>s+t.budget,0) : 0;
+  const totalEarned = !isClient ? myTasks.filter(t=>t.status==='completed').reduce((s,t)=>s+t.budget,0) : 0;
+
+  // Urutkan aktivitas terbaru: Aktif di atas, lalu terbaru berdasarkan waktu diambil/dibuat
+  myTasks.sort((a, b) => {
+    const isDoneA = a.status === 'completed' || a.status === 'cancelled';
+    const isDoneB = b.status === 'completed' || b.status === 'cancelled';
+    if (isDoneA && !isDoneB) return 1;
+    if (!isDoneA && isDoneB) return -1;
+    
+    const timeA = new Date(a.takenAt || a.createdAt).getTime();
+    const timeB = new Date(b.takenAt || b.createdAt).getTime();
+    return timeB - timeA;
+  });
+
+  content.innerHTML = `
+    <div class="animate-in">
+      <!-- Greeting -->
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold mb-1">Halo, ${currentUser.name}!</h2>
+        <p style="color:var(--muted);" class="text-sm">${isClient ? 'Kelola tugas Anda dan temukan joki terbaik' : 'Temukan tugas yang sesuai keahlian Anda'}</p>
+      </div>
+
+      <!-- Stats -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        ${isClient ? `
+          <div class="stat-card">
+            <div class="flex items-center justify-between mb-3">
+              <div class="icon-wrap" style="background:var(--gold-dim);color:var(--gold);"><i class="fas fa-coins"></i></div>
+              <span class="text-xs font-semibold" style="color:var(--muted);">Total Belanja</span>
+            </div>
+            <div class="text-2xl font-bold">${formatRupiah(totalSpent)}</div>
+          </div>
+        ` : `
+          <div class="stat-card">
+            <div class="flex items-center justify-between mb-3">
+              <div class="icon-wrap" style="background:var(--accent-dim);color:var(--accent);"><i class="fas fa-coins"></i></div>
+              <span class="text-xs font-semibold" style="color:var(--muted);">Total Pendapatan</span>
+            </div>
+            <div class="text-2xl font-bold">${formatRupiah(totalEarned)}</div>
+          </div>
+        `}
+        <div class="stat-card">
+          <div class="flex items-center justify-between mb-3">
+            <div class="icon-wrap" style="background:var(--accent-dim);color:var(--accent);"><i class="fas fa-door-open"></i></div>
+            <span class="text-xs font-semibold" style="color:var(--muted);">Terbuka</span>
+          </div>
+          <div class="text-2xl font-bold">${openCount}</div>
+        </div>
+        <div class="stat-card">
+          <div class="flex items-center justify-between mb-3">
+            <div class="icon-wrap" style="background:var(--info-dim);color:var(--info);"><i class="fas fa-spinner"></i></div>
+            <span class="text-xs font-semibold" style="color:var(--muted);">Aktif</span>
+          </div>
+          <div class="text-2xl font-bold">${progressCount + reviewCount}</div>
+        </div>
+        <div class="stat-card">
+          <div class="flex items-center justify-between mb-3">
+            <div class="icon-wrap" style="background:rgba(0,214,143,0.15);color:#00D68F;"><i class="fas fa-check-double"></i></div>
+            <span class="text-xs font-semibold" style="color:var(--muted);">Selesai</span>
+          </div>
+          <div class="text-2xl font-bold">${doneCount}</div>
+        </div>
+      </div>
+
+      <!-- Recent tasks -->
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold">Aktivitas Terbaru</h3>
+        <button onclick="navigateTo('${isClient?'mytasks':'mywork'}')" class="text-sm font-semibold" style="color:var(--accent);">Lihat Semua <i class="fas fa-arrow-right ml-1"></i></button>
+      </div>
+      <div class="space-y-3">
+        ${myTasks.slice(0,5).map((t,i) => `
+          <div class="task-card animate-slide" style="animation-delay:${i*0.05}s;" onclick="showTaskDetail('${t.id}')">
+            <div class="flex items-center justify-between flex-wrap gap-3">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background:var(--info-dim);color:var(--info);">
+                  <i class="fas ${categoryIcon(t.category)}"></i>
+                </div>
+                <div>
+                  <div class="font-semibold text-sm">${t.title}</div>
+                  <div class="flex items-center gap-2 mt-1">
+                    <span class="cat-badge">${t.category}</span>
+                    ${statusLabel(t.status)}
+                  </div>
+                </div>
+              </div>
+              <div class="text-right">
+                <div class="font-bold" style="color:var(--gold);">${formatRupiah(t.budget)}</div>
+                <div class="text-xs" style="color:var(--muted);">Deadline: ${formatDate(t.deadline)}</div>
+              </div>
+            </div>
+          </div>
+        `).join('')}
+        ${myTasks.length === 0 ? '<div class="text-center py-12" style="color:var(--muted);"><i class="fas fa-inbox text-4xl mb-3 block"></i>Belum ada aktivitas</div>' : ''}
+      </div>
+    </div>
+  `;
+}
+
+// ========================================
+// POST TASK (Client)
+// ========================================
+function renderPostTask() {
+  const content = document.getElementById('pageContent');
+  const categories = ['Matematika','Fisika','Kimia','Biologi','Bahasa','Programming','Desain','Penulisan','Lainnya'];
+  content.innerHTML = `
+    <div class="max-w-2xl animate-in">
+      <div class="stat-card">
+        <h3 class="text-xl font-bold mb-1">Posting Tugas Baru</h3>
+        <p class="text-sm mb-6" style="color:var(--muted);">Isi detail tugas Anda. Pembayaran akan ditahan di escrow sampai tugas selesai.</p>
+
+        <div class="space-y-5">
+          <div>
+            <label class="block text-xs font-semibold mb-2" style="color:var(--muted);">JUDUL TUGAS</label>
+            <input type="text" id="taskTitle" class="form-input" placeholder="Contoh: Tugas Kalkulus Bab 5">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold mb-2" style="color:var(--muted);">DESKRIPSI</label>
+            <textarea id="taskDesc" class="form-input" placeholder="Jelaskan detail tugas, format output yang diharapkan, dll."></textarea>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold mb-2" style="color:var(--muted);">KATEGORI</label>
+              <select id="taskCat" class="form-input">
+                ${categories.map(c=>`<option value="${c}">${c}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold mb-2" style="color:var(--muted);">DEADLINE</label>
+              <input type="date" id="taskDeadline" class="form-input">
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold mb-2" style="color:var(--muted);">BUDGET (Rp)</label>
+            <input type="number" id="taskBudget" class="form-input" placeholder="50000" min="10000" step="1000">
+            <p class="text-xs mt-2" style="color:var(--muted);"><i class="fas fa-shield-alt mr-1" style="color:var(--accent);"></i>Pembayaran akan ditahan di escrow untuk keamanan kedua belah pihak</p>
+          </div>
+          <div class="p-4 rounded-xl" style="background:var(--bg);border:1px solid var(--border);">
+            <div class="flex justify-between text-sm mb-2">
+              <span style="color:var(--muted);">Budget tugas</span>
+              <span id="budgetPreview" class="font-semibold">Rp 0</span>
+            </div>
+            <div class="flex justify-between text-sm mb-2">
+              <span style="color:var(--muted);">Biaya layanan (5%)</span>
+              <span id="feePreview" class="font-semibold" style="color:var(--gold);">Rp 0</span>
+            </div>
+            <div class="border-t pt-2 mt-2 flex justify-between text-sm font-bold" style="border-color:var(--border);">
+              <span>Total dibayar</span>
+              <span id="totalPreview" style="color:var(--accent);">Rp 0</span>
+            </div>
+          </div>
+          <button onclick="submitTask()" class="btn-primary w-full py-3 text-base">
+            <i class="fas fa-lock mr-2"></i>Posting & Bayar Escrow
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Live budget calculation
+  const budgetInput = document.getElementById('taskBudget');
+  budgetInput.addEventListener('input', () => {
+    const b = parseInt(budgetInput.value) || 0;
+    const fee = Math.round(b * 0.05);
+    document.getElementById('budgetPreview').textContent = formatRupiah(b);
+    document.getElementById('feePreview').textContent = formatRupiah(fee);
+    document.getElementById('totalPreview').textContent = formatRupiah(b + fee);
+  });
+
+  // Set min date
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('taskDeadline').setAttribute('min', today);
+}
+
+function submitTask() {
+  const title = document.getElementById('taskTitle').value.trim();
+  const desc = document.getElementById('taskDesc').value.trim();
+  const cat = document.getElementById('taskCat').value;
+  const deadline = document.getElementById('taskDeadline').value;
+  const budget = parseInt(document.getElementById('taskBudget').value);
+
+  if (!title) return toast('Judul tugas wajib diisi', 'error');
+  if (!desc) return toast('Deskripsi tugas wajib diisi', 'error');
+  if (!deadline) return toast('Deadline wajib diisi', 'error');
+  if (!budget || budget < 10000) return toast('Budget minimal Rp 10.000', 'error');
+
+  const fee = Math.round(budget * 0.05);
+  const totalDeduct = budget + fee;
+
+  // Refresh user data
+  const users = getData('users');
+  const user = users.find(u => u.id === currentUser.id);
+  if (user.balance < totalDeduct) return toast(`Saldo tidak cukup. Anda butuh ${formatRupiah(totalDeduct)}, saldo ${formatRupiah(user.balance)}`, 'error');
+
+  // Deduct balance
+  user.balance -= totalDeduct;
+  setData('users', users);
+  currentUser = user;
+
+  // Create task
+  const tasks = getData('tasks');
+  const newTask = {
+    id: genId(), clientId: currentUser.id, title, description: desc, category: cat,
+    deadline, budget, status: 'open', workerId: null,
+    createdAt: new Date().toISOString().split('T')[0], completedAt: null,
+    clientRating: null, workerRating: null, escrowHeld: true
+  };
+  tasks.push(newTask);
+  setData('tasks', tasks);
+
+  // Transaction record
+  const transactions = getData('transactions');
+  transactions.push({ id:genId(), userId:currentUser.id, type:'escrow', amount:-totalDeduct, taskId:newTask.id, createdAt:new Date().toISOString(), desc:`Escrow: ${title}`, status: 'approved' });
+  transactions.push({ id:genId(), userId:currentUser.id, type:'fee', amount:-fee, taskId:newTask.id, createdAt:new Date().toISOString(), desc:`Biaya layanan: ${title}`, status: 'approved' });
+  setData('transactions', transactions);
+
+  updateTopBar();
+  toast('Tugas berhasil diposting! Pembayaran escrow ditahan.', 'success');
+  navigateTo('mytasks');
+}
+
+// ========================================
+// MY TASKS (Client)
+// ========================================
+function renderMyTasks() {
+  const tasks = getData('tasks');
+  let myTasks = tasks.filter(t => t.clientId === currentUser.id);
+
+  // Urutkan: Aktif (Open, Progress, Review) di atas, Selesai/Batal di bawah. Newest first.
+  myTasks.sort((a, b) => {
+    const isDoneA = a.status === 'completed' || a.status === 'cancelled';
+    const isDoneB = b.status === 'completed' || b.status === 'cancelled';
+    if (isDoneA && !isDoneB) return 1;
+    if (!isDoneA && isDoneB) return -1;
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+
+  const content = document.getElementById('pageContent');
+
+  content.innerHTML = `
+    <div class="animate-in">
+      <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+        <div>
+          <h3 class="text-lg font-bold">Tugas Yang Anda Posting</h3>
+          <p class="text-sm" style="color:var(--muted);">${myTasks.length} tugas total</p>
+        </div>
+        <button onclick="navigateTo('posttask')" class="btn-primary"><i class="fas fa-plus mr-2"></i>Posting Tugas</button>
+      </div>
+
+      <!-- Filter tabs -->
+      <div class="flex gap-2 mb-5 flex-wrap">
+        <button onclick="filterMyTasks('all')" class="text-xs px-4 py-2 rounded-lg font-semibold" style="background:var(--accent);color:#0B1120;" id="filterAll">Semua</button>
+        <button onclick="filterMyTasks('open')" class="text-xs px-4 py-2 rounded-lg font-semibold" style="background:var(--card);color:var(--muted);" id="filterOpen">Terbuka</button>
+        <button onclick="filterMyTasks('in_progress')" class="text-xs px-4 py-2 rounded-lg font-semibold" style="background:var(--card);color:var(--muted);" id="filterIn_progress">Dikerjakan</button>
+        <button onclick="filterMyTasks('under_review')" class="text-xs px-4 py-2 rounded-lg font-semibold" style="background:var(--card);color:var(--muted);" id="filterUnder_review">Ditinjau</button>
+        <button onclick="filterMyTasks('completed')" class="text-xs px-4 py-2 rounded-lg font-semibold" style="background:var(--card);color:var(--muted);" id="filterCompleted">Selesai</button>
+      </div>
+
+      <div class="space-y-3" id="myTasksList">
+        ${myTasks.map((t,i) => taskCardHTML(t,i)).join('')}
+        ${myTasks.length === 0 ? '<div class="text-center py-16" style="color:var(--muted);"><i class="fas fa-clipboard text-5xl mb-4 block opacity-30"></i><p>Belum ada tugas. Posting tugas pertama Anda!</p></div>' : ''}
+      </div>
+    </div>
+  `;
+}
+
+function filterMyTasks(status) {
+  const tasks = getData('tasks');
+  let myTasks = tasks.filter(t => t.clientId === currentUser.id);
+  if (status !== 'all') myTasks = myTasks.filter(t => t.status === status);
+
+  // Tetap terapkan pengurutan pada hasil filter
+  myTasks.sort((a, b) => {
+    const isDoneA = a.status === 'completed' || a.status === 'cancelled';
+    const isDoneB = b.status === 'completed' || b.status === 'cancelled';
+    if (isDoneA && !isDoneB) return 1;
+    if (!isDoneA && isDoneB) return -1;
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+
+  document.getElementById('myTasksList').innerHTML = myTasks.length > 0
+    ? myTasks.map((t,i) => taskCardHTML(t,i)).join('')
+    : '<div class="text-center py-12" style="color:var(--muted);"><i class="fas fa-filter text-3xl mb-3 block"></i>Tidak ada tugas dengan filter ini</div>';
+
+  // Update button styles
+  document.querySelectorAll('[id^="filter"]').forEach(btn => {
+    btn.style.background = 'var(--card)';
+    btn.style.color = 'var(--muted)';
+  });
+  const activeBtn = document.getElementById('filter' + status.charAt(0).toUpperCase() + status.slice(1));
+  if (activeBtn) {
+    activeBtn.style.background = 'var(--accent)';
+    activeBtn.style.color = '#0B1120';
+  }
+}
+
+// ========================================
+// MARKETPLACE
+// ========================================
+function renderMarketplace() {
+  const tasks = getData('tasks');
+  const openTasks = tasks.filter(t => t.status === 'open' && t.clientId !== currentUser.id);
+  const content = document.getElementById('pageContent');
+
+  content.innerHTML = `
+    <div class="animate-in">
+      <div class="mb-6">
+        <h3 class="text-lg font-bold">Marketplace Tugas</h3>
+        <p class="text-sm" style="color:var(--muted);">${openTasks.length} tugas tersedia</p>
+      </div>
+
+      <!-- Search & Filter -->
+      <div class="flex gap-3 mb-5 flex-wrap">
+        <input type="text" id="searchTasks" class="form-input" style="max-width:300px;" placeholder="Cari tugas..." oninput="filterMarketplace()">
+        <select id="filterCat" class="form-input" style="max-width:200px;" onchange="filterMarketplace()">
+          <option value="">Semua Kategori</option>
+          <option>Matematika</option><option>Fisika</option><option>Kimia</option>
+          <option>Biologi</option><option>Bahasa</option><option>Programming</option>
+          <option>Desain</option><option>Penulisan</option><option>Lainnya</option>
+        </select>
+        <select id="filterSort" class="form-input" style="max-width:180px;" onchange="filterMarketplace()">
+          <option value="newest">Terbaru</option>
+          <option value="budget_high">Budget Tertinggi</option>
+          <option value="budget_low">Budget Terendah</option>
+          <option value="deadline">Deadline Terdekat</option>
+        </select>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" id="marketplaceList">
+        ${openTasks.map((t,i) => marketplaceCardHTML(t,i)).join('')}
+        ${openTasks.length === 0 ? '<div class="col-span-full text-center py-16" style="color:var(--muted);"><i class="fas fa-store text-5xl mb-4 block opacity-30"></i><p>Belum ada tugas tersedia</p></div>' : ''}
+      </div>
+    </div>
+  `;
+}
+
+function filterMarketplace() {
+  const tasks = getData('tasks');
+  let openTasks = tasks.filter(t => t.status === 'open' && t.clientId !== currentUser.id);
+  const search = (document.getElementById('searchTasks')?.value || '').toLowerCase();
+  const cat = document.getElementById('filterCat')?.value || '';
+  const sort = document.getElementById('filterSort')?.value || 'newest';
+
+  if (search) openTasks = openTasks.filter(t => t.title.toLowerCase().includes(search) || t.description.toLowerCase().includes(search));
+  if (cat) openTasks = openTasks.filter(t => t.category === cat);
+
+  switch(sort) {
+    case 'budget_high': openTasks.sort((a,b) => b.budget - a.budget); break;
+    case 'budget_low': openTasks.sort((a,b) => a.budget - b.budget); break;
+    case 'deadline': openTasks.sort((a,b) => new Date(a.deadline) - new Date(b.deadline)); break;
+    default: openTasks.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }
+
+  document.getElementById('marketplaceList').innerHTML = openTasks.length > 0
+    ? openTasks.map((t,i) => marketplaceCardHTML(t,i)).join('')
+    : '<div class="col-span-full text-center py-12" style="color:var(--muted);">Tidak ada tugas ditemukan</div>';
+}
+
+function marketplaceCardHTML(t, i) {
+  const users = getData('users');
+  const client = users.find(u => u.id === t.clientId);
+  const daysLeft = Math.ceil((new Date(t.deadline) - new Date()) / (1000*60*60*24));
+  return `
+    <div class="task-card animate-slide" style="animation-delay:${i*0.05}s;">
+      <div class="flex items-center justify-between mb-3">
+        <span class="cat-badge"><i class="fas ${categoryIcon(t.category)} mr-1"></i>${t.category}</span>
+        ${daysLeft <= 2 ? '<span class="text-xs font-semibold" style="color:var(--danger);"><i class="fas fa-clock mr-1"></i>Urgent</span>' : ''}
+      </div>
+      <h4 class="font-bold mb-2 text-base">${t.title}</h4>
+      <p class="text-sm mb-4 line-clamp-2" style="color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${t.description}</p>
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2">
+          <div class="w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold" style="background:var(--accent-dim);color:var(--accent);">${client?client.name.charAt(0):'?'}</div>
+          <span class="text-xs" style="color:var(--muted);">${client?client.name:'Unknown'}</span>
+        </div>
+        <span class="text-xs" style="color:var(--muted);"><i class="fas fa-calendar mr-1"></i>${formatDate(t.deadline)}</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-lg font-bold" style="color:var(--gold);">${formatRupiah(t.budget)}</span>
+        ${currentUser.role === 'worker' ? `<button onclick="takeTask('${t.id}')" class="btn-primary text-sm py-2 px-5">Ambil Tugas</button>` : `<button onclick="showTaskDetail('${t.id}')" class="btn-secondary text-sm py-2 px-5">Detail</button>`}
+      </div>
+    </div>
+  `;
+}
+
+// ========================================
+// TAKE TASK (Worker)
+// ========================================
+function takeTask(taskId) {
+  const tasks = getData('tasks');
+  const task = tasks.find(t => t.id === taskId);
+  if (!task) return toast('Tugas tidak ditemukan', 'error');
+  if (task.status !== 'open') return toast('Tugas sudah diambil', 'error');
+  if (task.clientId === currentUser.id) return toast('Anda tidak bisa mengambil tugas sendiri', 'error');
+
+  openModal(`
+    <div class="text-center mb-6">
+      <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style="background:var(--accent-dim);color:var(--accent);font-size:28px;">
+        <i class="fas fa-handshake"></i>
+      </div>
+      <h3 class="text-xl font-bold mb-1">Konfirmasi Ambil Tugas</h3>
+      <p class="text-sm" style="color:var(--muted);">Anda akan mengerjakan tugas ini</p>
+    </div>
+    <div class="p-4 rounded-xl mb-5" style="background:var(--bg);border:1px solid var(--border);">
+      <div class="font-semibold mb-2">${task.title}</div>
+      <div class="flex justify-between text-sm">
+        <span style="color:var(--muted);">Budget</span>
+        <span class="font-bold" style="color:var(--gold);">${formatRupiah(task.budget)}</span>
+      </div>
+      <div class="flex justify-between text-sm mt-1">
+        <span style="color:var(--muted);">Deadline</span>
+        <span>${formatDate(task.deadline)}</span>
+      </div>
+    </div>
+    <div class="p-3 rounded-lg mb-5 text-xs" style="background:var(--accent-dim);color:var(--accent);">
+      <i class="fas fa-shield-alt mr-1"></i> Pembayaran dijamin aman dengan sistem escrow. Dana sudah ditahan dan akan diterima setelah tugas selesai dan dikonfirmasi client.
+    </div>
+    <div class="flex gap-3">
+      <button onclick="closeModal()" class="btn-secondary flex-1">Batal</button>
+      <button onclick="confirmTakeTask('${taskId}')" class="btn-primary flex-1">Ya, Ambil Tugas</button>
+    </div>
+  `);
+}
+
+function confirmTakeTask(taskId) {
+  const tasks = getData('tasks');
+  const task = tasks.find(t => t.id === taskId);
+  if (!task || task.status !== 'open') return toast('Tugas tidak tersedia', 'error');
+
+  task.status = 'in_progress';
+  task.workerId = currentUser.id;
+  task.takenAt = new Date().toISOString(); // Catat waktu pengambilan tugas
+  setData('tasks', tasks);
+
+  closeModal();
+  toast('Berhasil mengambil tugas! Silakan kerjakan sebelum deadline.', 'success');
+  navigateTo(currentPage);
+}
+
+// ========================================
+// MY WORK (Worker)
+// ========================================
+function renderMyWork() {
+  const tasks = getData('tasks');
+  let myWork = tasks.filter(t => t.workerId === currentUser.id);
+  
+  // Urutkan: Aktif di atas, Selesai di bawah. Di dalam grup yang sama, urutkan berdasarkan diambil terbaru.
+  myWork.sort((a, b) => {
+    const isDoneA = a.status === 'completed' || a.status === 'cancelled';
+    const isDoneB = b.status === 'completed' || b.status === 'cancelled';
+    if (isDoneA && !isDoneB) return 1;
+    if (!isDoneA && isDoneB) return -1;
+    
+    const timeA = new Date(a.takenAt || a.createdAt).getTime();
+    const timeB = new Date(b.takenAt || b.createdAt).getTime();
+    return timeB - timeA;
+  });
+
+  const content = document.getElementById('pageContent');
+
+  content.innerHTML = `
+    <div class="animate-in">
+      <div class="mb-6">
+        <h3 class="text-lg font-bold">Tugas Yang Saya Kerjakan</h3>
+        <p class="text-sm" style="color:var(--muted);">${myWork.length} tugas dikerjakan</p>
+      </div>
+
+      <!-- Filter tabs for Worker -->
+      <div class="flex gap-2 mb-5 flex-wrap">
+        <button onclick="filterMyWork('all')" class="text-xs px-4 py-2 rounded-lg font-semibold" style="background:var(--accent);color:#0B1120;" id="workFilterAll">Semua</button>
+        <button onclick="filterMyWork('in_progress')" class="text-xs px-4 py-2 rounded-lg font-semibold" style="background:var(--card);color:var(--muted);" id="workFilterIn_progress">Berjalan</button>
+        <button onclick="filterMyWork('under_review')" class="text-xs px-4 py-2 rounded-lg font-semibold" style="background:var(--card);color:var(--muted);" id="workFilterUnder_review">Ditinjau</button>
+        <button onclick="filterMyWork('completed')" class="text-xs px-4 py-2 rounded-lg font-semibold" style="background:var(--card);color:var(--muted);" id="workFilterCompleted">Selesai</button>
+      </div>
+
+      <div class="space-y-3" id="myWorkList">
+        ${myWork.map((t,i) => taskCardHTML(t,i,true)).join('')}
+        ${myWork.length === 0 ? '<div class="text-center py-16" style="color:var(--muted);"><i class="fas fa-hard-hat text-5xl mb-4 block opacity-30"></i><p>Belum ada tugas yang Anda kerjakan. Cari tugas di Marketplace!</p></div>' : ''}
+      </div>
+    </div>
+  `;
+}
+
+function filterMyWork(status) {
+  const tasks = getData('tasks');
+  let myWork = tasks.filter(t => t.workerId === currentUser.id);
+  
+  if (status !== 'all') {
+    myWork = myWork.filter(t => t.status === status);
+  }
+
+  // Tetap terapkan pengurutan pada hasil filter
+  myWork.sort((a, b) => {
+    const isDoneA = a.status === 'completed' || a.status === 'cancelled';
+    const isDoneB = b.status === 'completed' || b.status === 'cancelled';
+    if (isDoneA && !isDoneB) return 1;
+    if (!isDoneA && isDoneB) return -1;
+    
+    const timeA = new Date(a.takenAt || a.createdAt).getTime();
+    const timeB = new Date(b.takenAt || b.createdAt).getTime();
+    return timeB - timeA;
+  });
+  
+  document.getElementById('myWorkList').innerHTML = myWork.length > 0
+    ? myWork.map((t,i) => taskCardHTML(t,i,true)).join('')
+    : '<div class="text-center py-12" style="color:var(--muted);"><i class="fas fa-filter text-3xl mb-3 block"></i>Tidak ada tugas dengan status ini</div>';
+
+  // Update button styles
+  document.querySelectorAll('[id^="workFilter"]').forEach(btn => {
+    btn.style.background = 'var(--card)';
+    btn.style.color = 'var(--muted)';
+  });
+  const activeBtn = document.getElementById('workFilter' + status.charAt(0).toUpperCase() + status.slice(1));
+  if (activeBtn) {
+    activeBtn.style.background = 'var(--accent)';
+    activeBtn.style.color = '#0B1120';
+  }
+}
+
+// ========================================
+// GENERIC TASK CARD
+// ========================================
+function taskCardHTML(t, i, isWorker=false) {
+  const users = getData('users');
+  const client = users.find(u => u.id === t.clientId);
+  const worker = users.find(u => u.id === t.workerId);
+
+  // Progress steps
+  const steps = ['open','in_progress','under_review','completed'];
+  const stepIdx = steps.indexOf(t.status);
+
+  return `
+    <div class="task-card animate-slide" style="animation-delay:${i*0.05}s;" onclick="showTaskDetail('${t.id}')">
+      <div class="flex items-start justify-between gap-4 flex-wrap">
+        <div class="flex items-start gap-3 flex-1 min-w-0">
+          <div class="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0" style="background:var(--info-dim);color:var(--info);">
+            <i class="fas ${categoryIcon(t.category)}"></i>
+          </div>
+          <div class="min-w-0">
+            <h4 class="font-bold text-sm truncate">${t.title}</h4>
+            <div class="flex items-center gap-2 mt-1.5 flex-wrap">
+              <span class="cat-badge">${t.category}</span>
+              ${statusLabel(t.status)}
+            </div>
+          </div>
+        </div>
+        <div class="text-right flex-shrink-0">
+          <div class="font-bold" style="color:var(--gold);">${formatRupiah(t.budget)}</div>
+          <div class="text-xs" style="color:var(--muted);">Deadline: ${formatDate(t.deadline)}</div>
+        </div>
+      </div>
+
+      <!-- Progress indicator -->
+      ${t.status !== 'cancelled' ? `
+      <div class="flex items-center gap-2 mt-4 px-2">
+        ${steps.map((s,si) => `
+          <div class="step-dot ${si < stepIdx ? 'done' : si === stepIdx ? 'active' : ''}">${si < stepIdx ? '<i class="fas fa-check text-xs"></i>' : si+1}</div>
+          ${si < steps.length-1 ? `<div class="step-line ${si < stepIdx ? 'filled' : ''}"></div>` : ''}
+        `).join('')}
+      </div>
+      ` : ''}
+
+      <div class="flex items-center justify-between mt-4 pt-3" style="border-top:1px solid var(--border);">
+        <div class="flex items-center gap-3 text-xs" style="color:var(--muted);">
+          <span><i class="fas fa-user mr-1"></i>${client ? client.name : 'Unknown'}</span>
+          ${worker ? `<span><i class="fas fa-laptop-code mr-1"></i>${worker.name}</span>` : '<span style="color:var(--accent);"><i class="fas fa-hourglass-half mr-1"></i>Menunggu joki</span>'}
+        </div>
+        ${t.status === 'in_progress' && isWorker ? `<button onclick="event.stopPropagation();submitWork('${t.id}')" class="text-xs px-3 py-1.5 rounded-lg font-semibold" style="background:var(--accent-dim);color:var(--accent);">Kirim Hasil</button>` : ''}
+        ${t.status === 'under_review' && !isWorker ? `<button onclick="event.stopPropagation();reviewWork('${t.id}')" class="text-xs px-3 py-1.5 rounded-lg font-semibold" style="background:var(--gold-dim);color:var(--gold);">Review</button>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+// ========================================
+// TASK DETAIL MODAL
+// ========================================
+function showTaskDetail(taskId) {
+  const tasks = getData('tasks');
+  const users = getData('users');
+  const t = tasks.find(tk => tk.id === taskId);
+  if (!t) return;
+  const client = users.find(u => u.id === t.clientId);
+  const worker = users.find(u => u.id === t.workerId);
+  const isClient = t.clientId === currentUser.id;
+  const isWorker = t.workerId === currentUser.id;
+
+  const steps = ['open','in_progress','under_review','completed'];
+  const stepLabels = ['Terbuka','Dikerjakan','Ditinjau','Selesai'];
+  const stepIdx = steps.indexOf(t.status);
+
+  openModal(`
+    <div>
+      <div class="flex items-center justify-between mb-4">
+        <span class="cat-badge"><i class="fas ${categoryIcon(t.category)} mr-1"></i>${t.category}</span>
+        ${statusLabel(t.status)}
+      </div>
+      <h3 class="text-xl font-bold mb-3">${t.title}</h3>
+      <p class="text-sm mb-5" style="color:var(--muted);line-height:1.7;">${t.description}</p>
+
+      <!-- Progress -->
+      <div class="flex items-center gap-1 mb-5">
+        ${steps.map((s,si) => `
+          <div class="flex-1 text-center">
+            <div class="step-dot mx-auto mb-1 ${si < stepIdx ? 'done' : si === stepIdx ? 'active' : ''}" style="width:24px;height:24px;font-size:10px;">${si < stepIdx ? '<i class="fas fa-check" style="font-size:8px;"></i>' : si+1}</div>
+            <div class="text-[10px] font-semibold" style="color:${si<=stepIdx?'var(--accent)':'var(--muted)'};">${stepLabels[si]}</div>
+          </div>
+        `).join('')}
+      </div>
+
+      <!-- Detail info -->
+      <div class="p-4 rounded-xl mb-4" style="background:var(--bg);border:1px solid var(--border);">
+        <div class="grid grid-cols-2 gap-3 text-sm">
+          <div><span style="color:var(--muted);">Budget</span><div class="font-bold mt-0.5" style="color:var(--gold);">${formatRupiah(t.budget)}</div></div>
+          <div><span style="color:var(--muted);">Deadline</span><div class="font-bold mt-0.5">${formatDate(t.deadline)}</div></div>
+          <div><span style="color:var(--muted);">Client</span><div class="font-bold mt-0.5">${client?client.name:'Unknown'}</div></div>
+          <div><span style="color:var(--muted);">Pengerja</span><div class="font-bold mt-0.5">${worker?worker.name:'Belum ada'}</div></div>
+          <div><span style="color:var(--muted);">Dibuat</span><div class="font-bold mt-0.5">${formatDate(t.createdAt)}</div></div>
+          <div><span style="color:var(--muted);">Escrow</span><div class="font-bold mt-0.5" style="color:${t.escrowHeld?'var(--gold)':'var(--accent)'};">${t.escrowHeld?'Ditahan':'Dilepas'}</div></div>
+        </div>
+      </div>
+
+      ${t.escrowHeld ? `<div class="p-3 rounded-lg mb-4 text-xs" style="background:var(--gold-dim);color:var(--gold);"><i class="fas fa-lock mr-1"></i> Dana ${formatRupiah(t.budget)} ditahan di escrow untuk keamanan transaksi</div>` : ''}
+
+      ${(t.status === 'under_review' || t.status === 'completed') && t.submissionNote ? `
+      <div class="p-4 rounded-xl mb-4" style="background:var(--accent-dim);border:1px solid rgba(0,214,143,0.2);">
+        <label class="block text-xs font-semibold mb-2" style="color:var(--accent);">HASIL KERJA / LINK:</label>
+        <div class="text-sm break-all font-medium">${t.submissionNote.replace(/\n/g, '<br>')}</div>
+      </div>
+      ` : ''}
+
+      <!-- Actions -->
+      <div class="flex gap-3 flex-wrap">
+        ${t.status === 'open' && currentUser.role === 'worker' && !isClient ? `<button onclick="closeModal();takeTask('${t.id}')" class="btn-primary flex-1"><i class="fas fa-handshake mr-2"></i>Ambil Tugas</button>` : ''}
+        ${t.status === 'in_progress' && isWorker ? `<button onclick="closeModal();submitWork('${t.id}')" class="btn-primary flex-1"><i class="fas fa-paper-plane mr-2"></i>Kirim Hasil</button>` : ''}
+        ${t.status === 'under_review' && isClient ? `<button onclick="closeModal();reviewWork('${t.id}')" class="btn-gold flex-1"><i class="fas fa-check-circle mr-2"></i>Review Hasil</button>` : ''}
+        ${t.status === 'open' && isClient ? `<button onclick="closeModal();cancelTask('${t.id}')" class="btn-danger flex-1"><i class="fas fa-times mr-2"></i>Batalkan</button>` : ''}
+        ${t.status === 'completed' && !t.clientRating && isClient ? `<button onclick="closeModal();rateTask('${t.id}','client')" class="btn-primary flex-1"><i class="fas fa-star mr-2"></i>Beri Rating</button>` : ''}
+        ${t.status === 'completed' && !t.workerRating && isWorker ? `<button onclick="closeModal();rateTask('${t.id}','worker')" class="btn-primary flex-1"><i class="fas fa-star mr-2"></i>Beri Rating</button>` : ''}
+        <button onclick="closeModal()" class="btn-secondary flex-1">Tutup</button>
+      </div>
+    </div>
+  `);
+}
+
+// ========================================
+// SUBMIT WORK (Worker)
+// ========================================
+function submitWork(taskId) {
+  openModal(`
+    <div class="text-center mb-5">
+      <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style="background:var(--info-dim);color:var(--info);font-size:28px;">
+        <i class="fas fa-paper-plane"></i>
+      </div>
+      <h3 class="text-xl font-bold mb-1">Kirim Hasil Kerja</h3>
+      <p class="text-sm" style="color:var(--muted);">Tugas akan dikirim ke client untuk direview</p>
+    </div>
+    <div class="mb-4">
+      <label class="block text-xs font-semibold mb-2" style="color:var(--muted);">CATATAN / LINK HASIL</label>
+      <textarea id="workNote" class="form-input" placeholder="Jelaskan hasil kerja Anda atau sertakan link/file..."></textarea>
+    </div>
+    <div class="p-3 rounded-lg mb-5 text-xs" style="background:var(--info-dim);color:var(--info);">
+      <i class="fas fa-info-circle mr-1"></i> Pastikan hasil kerja sudah final. Client akan mereview sebelum pembayaran dilepas.
+    </div>
+    <div class="flex gap-3">
+      <button onclick="closeModal()" class="btn-secondary flex-1">Batal</button>
+      <button onclick="confirmSubmitWork('${taskId}')" class="btn-primary flex-1">Kirim Hasil</button>
+    </div>
+  `);
+}
+
+function confirmSubmitWork(taskId) {
+  const note = document.getElementById('workNote').value.trim();
+  if (!note) return toast('Harap sertakan link atau catatan hasil kerja', 'error');
+
+  const tasks = getData('tasks');
+  const task = tasks.find(t => t.id === taskId);
+  if (!task) return;
+  
+  task.status = 'under_review';
+  task.submissionNote = note;
+  setData('tasks', tasks);
+  
+  closeModal();
+  toast('Hasil kerja berhasil dikirim! Menunggu review dari client.', 'success');
+  navigateTo(currentPage);
+}
+
+// ========================================
+// REVIEW WORK (Client)
+// ========================================
+function reviewWork(taskId) {
+  const tasks = getData('tasks');
+  const task = tasks.find(t => t.id === taskId);
+  if (!task) return;
+
+  openModal(`
+    <div class="text-center mb-5">
+      <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style="background:var(--gold-dim);color:var(--gold);font-size:28px;">
+        <i class="fas fa-clipboard-check"></i>
+      </div>
+      <h3 class="text-xl font-bold mb-1">Review Hasil Kerja</h3>
+      <p class="text-sm" style="color:var(--muted);">Periksa hasil kerja dari joki</p>
+    </div>
+
+    <div class="p-4 rounded-xl mb-6" style="background:var(--bg);border:1px solid var(--border);">
+      <label class="block text-xs font-semibold mb-2" style="color:var(--muted);">LINK / CATATAN DARI JOKI:</label>
+      <div class="text-sm font-medium break-all" style="color:var(--accent);">
+        ${task.submissionNote ? task.submissionNote.replace(/\n/g, '<br>') : 'Tidak ada catatan'}
+      </div>
+    </div>
+
+    <div class="space-y-3 mb-5">
+      <button onclick="approveWork('${taskId}')" class="w-full p-4 rounded-xl text-left transition-all hover:border-[var(--accent)]" style="background:var(--bg);border:1px solid var(--border);">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background:var(--accent-dim);color:var(--accent);"><i class="fas fa-check"></i></div>
+          <div>
+            <div class="font-semibold" style="color:var(--accent);">Terima & Setujui</div>
+            <div class="text-xs" style="color:var(--muted);">Pembayaran escrow akan dilepas ke joki</div>
+          </div>
+        </div>
+      </button>
+      <button onclick="requestRevision('${taskId}')" class="w-full p-4 rounded-xl text-left transition-all hover:border-[var(--info)]" style="background:var(--bg);border:1px solid var(--border);">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background:var(--info-dim);color:var(--info);"><i class="fas fa-redo"></i></div>
+          <div>
+            <div class="font-semibold" style="color:var(--info);">Minta Revisi</div>
+            <div class="text-xs" style="color:var(--muted);">Kembalikan ke joki untuk diperbaiki</div>
+          </div>
+        </div>
+      </button>
+      <button onclick="rejectWork('${taskId}')" class="w-full p-4 rounded-xl text-left transition-all hover:border-[var(--danger)]" style="background:var(--bg);border:1px solid var(--border);">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background:var(--danger-dim);color:var(--danger);"><i class="fas fa-times"></i></div>
+          <div>
+            <div class="font-semibold" style="color:var(--danger);">Tolak & Refund</div>
+            <div class="text-xs" style="color:var(--muted);">Escrow dikembalikan ke saldo Anda</div>
+          </div>
+        </div>
+      </button>
+    </div>
+    <button onclick="closeModal()" class="btn-secondary w-full">Batal</button>
+  `);
+}
+
+function approveWork(taskId) {
+  const tasks = getData('tasks');
+  const users = getData('users');
+  const transactions = getData('transactions');
+  const task = tasks.find(t => t.id === taskId);
+  if (!task) return;
+
+  task.status = 'completed';
+  task.completedAt = new Date().toISOString().split('T')[0];
+  task.escrowHeld = false;
+
+  // Release escrow to worker
+  const worker = users.find(u => u.id === task.workerId);
+  if (worker) {
+    worker.balance += task.budget;
+    worker.completedJobs = (worker.completedJobs || 0) + 1;
+    // Transaction for worker
+    transactions.push({ id:genId(), userId:worker.id, type:'earning', amount:task.budget, taskId:task.id, createdAt:new Date().toISOString(), desc:`Pembayaran: ${task.title}`, status:'approved' });
+  }
+  // Update client completedJobs
+  const client = users.find(u => u.id === task.clientId);
+  if (client) client.completedJobs = (client.completedJobs || 0) + 1;
+
+  setData('tasks', tasks);
+  setData('users', users);
+  setData('transactions', transactions);
+
+  closeModal();
+  toast('Tugas disetujui! Pembayaran berhasil dilepas ke joki.', 'success');
+  updateTopBar();
+  navigateTo(currentPage);
+}
+
+function requestRevision(taskId) {
+  const tasks = getData('tasks');
+  const task = tasks.find(t => t.id === taskId);
+  if (!task) return;
+  task.status = 'in_progress';
+  setData('tasks', tasks);
+  closeModal();
+  toast('Revisi diminta. Tugas dikembalikan ke joki.', 'warning');
+  navigateTo(currentPage);
+}
+
+function rejectWork(taskId) {
+  const tasks = getData('tasks');
+  const users = getData('users');
+  const transactions = getData('transactions');
+  const task = tasks.find(t => t.id === taskId);
+  if (!task) return;
+
+  task.status = 'cancelled';
+  task.escrowHeld = false;
+
+  // Refund to client
+  const client = users.find(u => u.id === task.clientId);
+  if (client) {
+    client.balance += task.budget;
+    transactions.push({ id:genId(), userId:client.id, type:'refund', amount:task.budget, taskId:task.id, createdAt:new Date().toISOString(), desc:`Refund: ${task.title}`, status:'approved' });
+  }
+
+  setData('tasks', tasks);
+  setData('users', users);
+  setData('transactions', transactions);
+
+  closeModal();
+  toast('Tugas ditolak. Escrow dikembalikan ke saldo Anda.', 'info');
+  updateTopBar();
+  navigateTo(currentPage);
+}
+
+function cancelTask(taskId) {
+  const tasks = getData('tasks');
+  const users = getData('users');
+  const transactions = getData('transactions');
+  const task = tasks.find(t => t.id === taskId);
+  if (!task || task.status !== 'open') return toast('Tugas tidak bisa dibatalkan', 'error');
+
+  task.status = 'cancelled';
+  task.escrowHeld = false;
+
+  // Refund
+  const client = users.find(u => u.id === task.clientId);
+  if (client) {
+    const totalRefund = task.budget + Math.round(task.budget * 0.05); // budget + fee
+    client.balance += totalRefund;
+    transactions.push({ id:genId(), userId:client.id, type:'refund', amount:totalRefund, taskId:task.id, createdAt:new Date().toISOString(), desc:`Refund pembatalan: ${task.title}`, status:'approved' });
+  }
+
+  setData('tasks', tasks);
+  setData('users', users);
+  setData('transactions', transactions);
+
+  toast('Tugas dibatalkan. Dana dikembalikan ke saldo Anda.', 'info');
+  updateTopBar();
+  navigateTo(currentPage);
+}
+
+// ========================================
+// RATING
+// ========================================
+function rateTask(taskId, raterRole) {
+  let selectedRating = 0;
+  openModal(`
+    <div class="text-center mb-5">
+      <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style="background:var(--gold-dim);color:var(--gold);font-size:28px;">
+        <i class="fas fa-star"></i>
+      </div>
+      <h3 class="text-xl font-bold mb-1">Beri Rating</h3>
+      <p class="text-sm" style="color:var(--muted);">${raterRole==='client'?'Rate pengerja tugas':'Rate pemberi tugas'}</p>
+    </div>
+    <div class="flex justify-center gap-2 mb-6" id="ratingStars">
+      ${[1,2,3,4,5].map(n => `<span class="star" onclick="setRating(${n})" data-val="${n}"><i class="fas fa-star"></i></span>`).join('')}
+    </div>
+    <div class="flex gap-3">
+      <button onclick="closeModal()" class="btn-secondary flex-1">Nanti Saja</button>
+      <button onclick="submitRating('${taskId}','${raterRole}')" class="btn-primary flex-1">Submit Rating</button>
+    </div>
+  `);
+
+  window._selectedRating = 0;
+  window.setRating = function(n) {
+    window._selectedRating = n;
+    document.querySelectorAll('#ratingStars .star').forEach((s,i) => {
+      s.classList.toggle('active', i < n);
+    });
+  };
+}
+
+function submitRating(taskId, raterRole) {
+  const rating = window._selectedRating;
+  if (!rating) return toast('Pilih rating terlebih dahulu', 'error');
+
+  const tasks = getData('tasks');
+  const task = tasks.find(t => t.id === taskId);
+  if (!task) return;
+
+  if (raterRole === 'client') {
+    task.clientRating = rating;
+    // Update worker rating
+    const users = getData('users');
+    const worker = users.find(u => u.id === task.workerId);
+    if (worker) {
+      worker.rating = worker.rating ? Math.round(((worker.rating * (worker.completedJobs-1)) + rating) / worker.completedJobs * 10) / 10 : rating;
+      setData('users', users);
+    }
+  } else {
+    task.workerRating = rating;
+  }
+  setData('tasks', tasks);
+  closeModal();
+  toast('Rating berhasil diberikan!', 'success');
+  navigateTo(currentPage);
+}
+
+// ========================================
+// WALLET
+// ========================================
+function renderWallet() {
+  const content = document.getElementById('pageContent');
+  const users = getData('users');
+  const user = users.find(u => u.id === currentUser.id);
+  const inEscrow = getData('tasks').filter(t => t.clientId === currentUser.id && t.escrowHeld).reduce((s,t) => s+t.budget, 0);
+  let adminSettings = JSON.parse(localStorage.getItem('jt_admin_settings'));
+  
+  if (!adminSettings) {
+    adminSettings = {
+      bank_name: 'Bank Central Asia (BCA)',
+      bank_account: '1234567890',
+      bank_owner: 'PT Joki Tugas Indonesia',
+      e_wallet: 'DANA/OVO/GoPay: 081234567890 (a.n. JokiTugas)'
+    };
+  }
+
+  content.innerHTML = `
+    <div class="max-w-2xl animate-in">
+      <!-- Balance card -->
+      <div class="relative overflow-hidden rounded-2xl p-8 mb-6" style="background:linear-gradient(135deg,#0E2A1F,#0A1F2E);border:1px solid rgba(0,214,143,0.2);">
+        <div class="glow-orb" style="width:200px;height:200px;background:var(--accent);top:-50px;right:-50px;opacity:0.1;"></div>
+        <div class="relative z-10">
+          <p class="text-sm font-semibold mb-1" style="color:var(--muted);">Saldo Tersedia</p>
+          <h2 class="text-4xl font-bold mb-4" style="color:var(--accent);">${formatRupiah(user.balance)}</h2>
+          <div class="flex items-center gap-4">
+            <div>
+              <p class="text-xs" style="color:var(--muted);">Ditahan di Escrow</p>
+              <p class="font-bold" style="color:var(--gold);">${formatRupiah(inEscrow)}</p>
+            </div>
+            <div class="w-px h-8" style="background:var(--border);"></div>
+            <div>
+              <p class="text-xs" style="color:var(--muted);">Total Aset</p>
+              <p class="font-bold">${formatRupiah(user.balance + inEscrow)}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bank Info (Manual) -->
+      <div class="stat-card mb-6" style="border-left:4px solid var(--accent);">
+        <h3 class="text-sm font-bold mb-3"><i class="fas fa-university mr-2"></i>Informasi Rekening Platform</h3>
+        <div class="space-y-2 text-sm">
+          <div class="flex justify-between"><span style="color:var(--muted);">Bank:</span><span class="font-semibold">${adminSettings.bank_name}</span></div>
+          <div class="flex justify-between"><span style="color:var(--muted);">No. Rekening:</span><span class="font-bold text-lg" style="color:var(--accent);">${adminSettings.bank_account}</span></div>
+          <div class="flex justify-between"><span style="color:var(--muted);">Atas Nama:</span><span class="font-semibold">${adminSettings.bank_owner}</span></div>
+          <div class="pt-2 border-t mt-2" style="border-color:var(--border);">
+            <p class="text-xs" style="color:var(--muted);">${adminSettings.e_wallet}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top up -->
+      <div class="stat-card mb-6">
+        <h3 class="text-lg font-bold mb-4">Top Up Saldo</h3>
+        <div class="grid grid-cols-4 gap-3 mb-4">
+          ${[50000,100000,250000,500000].map(a => `
+            <button onclick="document.getElementById('topupAmount').value=${a}" class="p-3 rounded-xl text-center text-sm font-semibold transition-all hover:border-[var(--accent)]" style="background:var(--bg);border:1px solid var(--border);">
+              ${formatRupiah(a)}
+            </button>
+          `).join('')}
+        </div>
+        <div class="flex gap-3">
+          <input type="number" id="topupAmount" class="form-input flex-1" placeholder="Jumlah transfer" min="10000">
+          <button onclick="processTopup()" class="btn-primary px-6"><i class="fas fa-arrow-up mr-2"></i>Konfirmasi Transfer</button>
+        </div>
+      </div>
+
+      <!-- Withdraw -->
+      <div class="stat-card">
+        <h3 class="text-lg font-bold mb-4">Tarik Saldo</h3>
+        <p class="text-sm mb-4" style="color:var(--muted);">Dana akan dikirim ke rekening Anda setelah disetujui admin (estimasi 1x24 jam)</p>
+        <div class="space-y-4">
+          <div class="grid grid-cols-2 gap-3">
+            <input type="text" id="withdrawBank" class="form-input" placeholder="Nama Bank (BCA/DANA/dll)">
+            <input type="text" id="withdrawAccount" class="form-input" placeholder="No. Rekening">
+          </div>
+          <div class="flex gap-3">
+            <input type="number" id="withdrawAmount" class="form-input flex-1" placeholder="Jumlah penarikan" min="50000">
+            <button onclick="processWithdraw()" class="btn-gold px-6"><i class="fas fa-arrow-down mr-2"></i>Tarik</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function processTopup() {
+  const amount = parseInt(document.getElementById('topupAmount').value);
+  if (!amount || amount < 10000) return toast('Minimal top up Rp 10.000', 'error');
+
+  openModal(`
+    <div class="text-center mb-5">
+      <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style="background:var(--accent-dim);color:var(--accent);font-size:28px;">
+        <i class="fas fa-file-invoice-dollar"></i>
+      </div>
+      <h3 class="text-xl font-bold mb-1">Konfirmasi Transfer</h3>
+      <p class="text-sm" style="color:var(--muted);">Unggah bukti transfer untuk verifikasi admin</p>
+    </div>
+    <div class="p-4 rounded-xl mb-5" style="background:var(--bg);border:1px solid var(--border);">
+      <div class="flex justify-between mb-2"><span style="color:var(--muted);">Jumlah</span><span class="font-bold">${formatRupiah(amount)}</span></div>
+      
+      <div class="mb-3 mt-3 pt-3 border-t text-left" style="border-color:var(--border);">
+        <label class="block text-xs font-semibold mb-2" style="color:var(--muted);">UNGGAH BUKTI PEMBAYARAN</label>
+        <div class="relative group cursor-pointer">
+          <input type="file" id="topupFileInput" class="hidden" accept="image/*" onchange="handleProofUpload(this)">
+          <div onclick="document.getElementById('topupFileInput').click()" class="w-full h-32 rounded-xl border-2 border-dashed border-[var(--border)] flex flex-col items-center justify-center gap-2 hover:border-[var(--accent)] transition-all overflow-hidden" id="proofPreviewArea">
+            <i class="fas fa-cloud-upload-alt text-2xl" style="color:var(--muted);"></i>
+            <span class="text-xs font-semibold" style="color:var(--muted);">Klik untuk pilih foto</span>
+          </div>
+        </div>
+        <textarea id="topupProofNote" class="form-input mt-3 text-xs" style="min-height:60px;" placeholder="Catatan tambahan (Opsional)..."></textarea>
+      </div>
+    </div>
+    <div class="p-3 rounded-lg mb-5 text-xs" style="background:var(--gold-dim);color:var(--gold);">
+      <i class="fas fa-info-circle mr-1"></i> Admin akan memverifikasi transfer Anda. Saldo akan ditambahkan setelah disetujui.
+    </div>
+    <div class="flex gap-3">
+      <button onclick="closeModal()" class="btn-secondary flex-1">Batal</button>
+      <button onclick="confirmTopup(${amount})" class="btn-primary flex-1">Kirim Bukti</button>
+    </div>
+  `);
+}
+
+// Global variable to store Base64 string temporarily
+window._tempProofImage = null;
+
+function handleProofUpload(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      window._tempProofImage = e.target.result;
+      const previewArea = document.getElementById('proofPreviewArea');
+      previewArea.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">`;
+      previewArea.classList.remove('border-dashed');
+      previewArea.style.borderColor = 'var(--accent)';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+function confirmTopup(amount) {
+  const note = document.getElementById('topupProofNote').value.trim();
+  const proofImage = window._tempProofImage;
+
+  if (!proofImage) return toast('Harap unggah foto bukti transfer', 'error');
+
+  const transactions = getData('transactions');
+  transactions.push({ 
+    id:genId(), 
+    userId:currentUser.id, 
+    type:'topup', 
+    amount, 
+    taskId:null, 
+    createdAt:new Date().toISOString(), 
+    desc:'Top up saldo (Menunggu Verifikasi)', 
+    status:'pending',
+    proofUrl: proofImage,
+    note: note
+  });
+  setData('transactions', transactions);
+  
+  window._tempProofImage = null;
+  closeModal();
+  toast(`Laporan top up ${formatRupiah(amount)} terkirim! Menunggu verifikasi admin.`, 'info');
+  navigateTo('transactions');
+}
+
+function processWithdraw() {
+  const amount = parseInt(document.getElementById('withdrawAmount').value);
+  const bank = document.getElementById('withdrawBank').value.trim();
+  const account = document.getElementById('withdrawAccount').value.trim();
+
+  if (!amount || amount < 50000) return toast('Minimal penarikan Rp 50.000', 'error');
+  if (!bank || !account) return toast('Isi detail bank tujuan', 'error');
+
+  const users = getData('users');
+  const user = users.find(u => u.id === currentUser.id);
+  if (user.balance < amount) return toast('Saldo tidak cukup', 'error');
+
+  // Deduct balance immediately for security
+  user.balance -= amount;
+  const transactions = getData('transactions');
+  transactions.push({ 
+    id:genId(), 
+    userId:user.id, 
+    type:'withdraw', 
+    amount:-amount, 
+    taskId:null, 
+    createdAt:new Date().toISOString(), 
+    desc:'Penarikan saldo (Sedang Diproses)', 
+    status:'pending',
+    bankDetails: `${bank} - ${account}`
+  });
+  
+  setData('users', users);
+  setData('transactions', transactions);
+  currentUser = user;
+  updateTopBar();
+  toast(`Penarikan ${formatRupiah(amount)} diajukan! Menunggu pengiriman admin.`, 'success');
+  renderWallet();
+}
+
+// ========================================
+// TRANSACTIONS
+// ========================================
+function renderTransactions() {
+  const transactions = getData('transactions');
+  const users = getData('users');
+  let myTrans = transactions;
+  
+  if (!currentUser.isAdmin) {
+    myTrans = transactions.filter(t => t.userId === currentUser.id);
+  }
+  
+  // Urutkan: Benar-benar berdasarkan waktu terbaru (Aktivitas paling baru di atas)
+  myTrans.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  const content = document.getElementById('pageContent');
+
+  const typeIcon = { topup:'fa-arrow-down', withdraw:'fa-arrow-up', escrow:'fa-lock', earning:'fa-coins', refund:'fa-undo', fee:'fa-receipt' };
+  const typeColor = { topup:'var(--accent)', withdraw:'var(--gold)', escrow:'var(--info)', earning:'var(--accent)', refund:'var(--info)', fee:'var(--muted)' };
+  const typeLabel = { topup:'Top Up', withdraw:'Tarik', escrow:'Escrow', earning:'Pendapatan', refund:'Refund', fee:'Biaya' };
+  
+  const statusLabels = { pending: 'Pending', approved: 'Sukses', rejected: 'Ditolak' };
+  const statusColors = { pending: 'var(--gold)', approved: 'var(--accent)', rejected: 'var(--danger)' };
+
+  content.innerHTML = `
+    <div class="animate-in max-w-3xl">
+      <div class="mb-6">
+        <h3 class="text-lg font-bold">${currentUser.isAdmin ? 'Semua Riwayat Transaksi' : 'Riwayat Transaksi Saya'}</h3>
+        <p class="text-sm" style="color:var(--muted);">${myTrans.length} transaksi</p>
+      </div>
+      <div class="space-y-2">
+        ${myTrans.map((t,i) => {
+          const u = users.find(user => user.id === t.userId);
+          return `
+          <div class="flex items-center gap-4 p-4 rounded-xl transition-all hover:bg-[var(--card)] animate-slide" style="animation-delay:${i*0.03}s;border:1px solid var(--border);">
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style="background:${typeColor[t.type]}20;color:${typeColor[t.type]};">
+              <i class="fas ${typeIcon[t.type] || 'fa-circle'}"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="font-semibold text-sm truncate">${t.desc}</div>
+              <div class="flex items-center gap-3 mt-1 flex-wrap">
+                <span class="text-xs" style="color:var(--muted);"><i class="fas fa-calendar mr-1"></i>${formatDate(t.createdAt)}</span>
+                ${currentUser.isAdmin ? `<span class="text-xs" style="color:var(--info);"><i class="fas fa-user mr-1"></i>${u?u.name:'Unknown'}</span>` : ''}
+                <span class="text-[10px] px-2 py-0.5 rounded font-bold" style="background:${statusColors[t.status || 'approved']}20;color:${statusColors[t.status || 'approved']}; border: 1px solid ${statusColors[t.status || 'approved']}30;">
+                  ${statusLabels[t.status || 'approved']}
+                </span>
+              </div>
+            </div>
+            <div class="font-bold text-sm flex-shrink-0" style="color:${t.amount>=0?'var(--accent)':'var(--danger)'};">
+              ${t.amount >= 0 ? '+' : ''}${formatRupiah(Math.abs(t.amount))}
+            </div>
+          </div>
+          `;
+        }).join('')}
+        ${myTrans.length === 0 ? '<div class="text-center py-16" style="color:var(--muted);"><i class="fas fa-receipt text-5xl mb-4 block opacity-30"></i><p>Belum ada transaksi</p></div>' : ''}
+      </div>
+    </div>
+  `;
+}
+
+// ========================================
+// ADMIN PANEL
+// ========================================
+function renderAdminPanel() {
+  if (!currentUser.isAdmin) return navigateTo('dashboard');
+  
+  const transactions = getData('transactions');
+  const users = getData('users');
+  const pendingRequests = transactions.filter(t => t.status === 'pending');
+  let adminSettings = JSON.parse(localStorage.getItem('jt_admin_settings')) || {
+    bank_name: 'Bank Central Asia (BCA)',
+    bank_account: '1234567890',
+    bank_owner: 'PT Joki Tugas Indonesia',
+    e_wallet: 'DANA/OVO/GoPay: 081234567890 (a.n. JokiTugas)'
+  };
+  
+  const content = document.getElementById('pageContent');
+  content.innerHTML = `
+    <div class="animate-in">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Left Column: Verification -->
+        <div class="lg:col-span-2">
+          <div class="mb-6">
+            <h3 class="text-xl font-bold">Verifikasi Transaksi</h3>
+            <p class="text-sm" style="color:var(--muted);">Terdapat ${pendingRequests.length} permintaan yang perlu disetujui</p>
+          </div>
+
+          <div class="grid grid-cols-1 gap-4">
+            ${pendingRequests.map((t, i) => {
+              const u = users.find(user => user.id === t.userId);
+              const isTopup = t.type === 'topup';
+              
+              return `
+                <div class="stat-card flex flex-col md:flex-row md:items-center justify-between gap-4 animate-slide" style="animation-delay:${i*0.05}s;">
+                  <div class="flex items-start gap-4">
+                    <div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl" style="background:${isTopup?'var(--accent-dim)':'var(--gold-dim)'};color:${isTopup?'var(--accent)':'var(--gold)'};">
+                      <i class="fas ${isTopup?'fa-arrow-up':'fa-arrow-down'}"></i>
+                    </div>
+                    <div>
+                      <div class="flex items-center gap-2 mb-1">
+                        <span class="font-bold text-base">${isTopup ? 'Top Up' : 'Withdraw'}</span>
+                        <span class="badge ${isTopup ? 'badge-open' : 'badge-review'}">${formatRupiah(Math.abs(t.amount))}</span>
+                      </div>
+                      <div class="text-sm font-semibold">${u ? u.name : 'Unknown User'} <span class="text-xs font-normal" style="color:var(--muted);">(${u ? u.email : '-'})</span></div>
+                      <div class="text-xs mt-2 p-2 rounded bg-[var(--bg)] border border-[var(--border)]" style="color:var(--fg);">
+                        <span class="font-bold text-[var(--muted)] mr-1">${isTopup ? 'BUKTI PEMBAYARAN:' : 'KE REKENING:'}</span>
+                        <div class="mt-2">
+                          ${isTopup 
+                            ? `<img src="${t.proofUrl}" class="w-24 h-24 object-cover rounded-lg border border-[var(--border)] cursor-pointer hover:opacity-80 transition-all" onclick="openModal('<img src=\\'${t.proofUrl}\\' class=\\'w-full rounded-xl\\'>')">
+                               ${t.note ? `<p class="mt-2 text-[10px]" style="color:var(--muted);"><i class="fas fa-comment-dots mr-1"></i>${t.note}</p>` : ''}` 
+                            : `<span class="break-all font-mono">${t.bankDetails}</span>`
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex gap-2">
+                    <button onclick="approveTransaction('${t.id}')" class="btn-primary py-2 px-4 text-xs"><i class="fas fa-check mr-1"></i>Setujui</button>
+                    <button onclick="rejectTransaction('${t.id}')" class="btn-danger py-2 px-4 text-xs"><i class="fas fa-times mr-1"></i>Tolak</button>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+            ${pendingRequests.length === 0 ? '<div class="text-center py-20 stat-card" style="color:var(--muted); border-style:dashed;"><i class="fas fa-check-circle text-5xl mb-4 block opacity-20"></i>Semua transaksi sudah diproses</div>' : ''}
+          </div>
+        </div>
+
+        <!-- Right Column: Settings -->
+        <div class="lg:col-span-1">
+          <div class="mb-6">
+            <h3 class="text-xl font-bold">Pengaturan Platform</h3>
+            <p class="text-sm" style="color:var(--muted);">Update rekening pembayaran platform</p>
+          </div>
+
+          <div class="stat-card">
+            <div class="space-y-4">
+              <div>
+                <label class="block text-xs font-semibold mb-2" style="color:var(--muted);">NAMA BANK</label>
+                <input type="text" id="setBankName" class="form-input" value="${adminSettings.bank_name}" placeholder="Contoh: BCA / Mandiri">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold mb-2" style="color:var(--muted);">NOMOR REKENING</label>
+                <input type="text" id="setBankAccount" class="form-input" value="${adminSettings.bank_account}" placeholder="Nomor rekening">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold mb-2" style="color:var(--muted);">ATAS NAMA</label>
+                <input type="text" id="setBankOwner" class="form-input" value="${adminSettings.bank_owner}" placeholder="Nama pemilik rekening">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold mb-2" style="color:var(--muted);">E-WALLET / INFO LAIN</label>
+                <textarea id="setEWallet" class="form-input" style="min-height:80px;" placeholder="Info DANA/OVO/GoPay...">${adminSettings.e_wallet}</textarea>
+              </div>
+              <button onclick="saveAdminSettings()" class="btn-primary w-full py-3">
+                <i class="fas fa-save mr-2"></i>Simpan Pengaturan
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  `;
+}
+
+function saveAdminSettings() {
+  const settings = {
+    bank_name: document.getElementById('setBankName').value.trim(),
+    bank_account: document.getElementById('setBankAccount').value.trim(),
+    bank_owner: document.getElementById('setBankOwner').value.trim(),
+    e_wallet: document.getElementById('setEWallet').value.trim()
+  };
+
+  if (!settings.bank_name || !settings.bank_account || !settings.bank_owner) {
+    return toast('Mohon lengkapi data bank utama', 'error');
+  }
+
+  localStorage.setItem('jt_admin_settings', JSON.stringify(settings));
+  toast('Pengaturan platform berhasil diperbarui!', 'success');
+  renderAdminPanel();
+}
+
+function approveTransaction(transId) {
+  const transactions = getData('transactions');
+  const users = getData('users');
+  const t = transactions.find(trans => trans.id === transId);
+  if (!t) return;
+
+  const u = users.find(user => user.id === t.userId);
+  if (!u) return;
+
+  t.status = 'approved';
+  
+  if (t.type === 'topup') {
+    u.balance += t.amount;
+    t.desc = `Top up saldo sebesar ${formatRupiah(t.amount)} (Disetujui)`;
+  } else {
+    // Balance was already deducted when withdrawal was requested
+    t.desc = `Penarikan saldo sebesar ${formatRupiah(Math.abs(t.amount))} (Berhasil Dikirim)`;
+  }
+
+  setData('transactions', transactions);
+  setData('users', users);
+  
+  toast('Transaksi berhasil disetujui!', 'success');
+  renderAdminPanel();
+}
+
+function rejectTransaction(transId) {
+  const transactions = getData('transactions');
+  const users = getData('users');
+  const t = transactions.find(trans => trans.id === transId);
+  if (!t) return;
+
+  const u = users.find(user => user.id === t.userId);
+  if (!u) return;
+
+  t.status = 'rejected';
+  
+  if (t.type === 'topup') {
+    t.desc = `Top up saldo sebesar ${formatRupiah(t.amount)} (Ditolak Admin)`;
+  } else {
+    // Refund balance back to user
+    u.balance += Math.abs(t.amount);
+    t.desc = `Penarikan saldo sebesar ${formatRupiah(Math.abs(t.amount))} (Ditolak & Refund)`;
+  }
+
+  setData('transactions', transactions);
+  setData('users', users);
+  
+  toast('Transaksi ditolak.', 'warning');
+  renderAdminPanel();
+}
+
+// ========================================
+// PROFILE
+// ========================================
+function renderProfile() {
+  const content = document.getElementById('pageContent');
+  const users = getData('users');
+  const user = users.find(u => u.id === currentUser.id);
+  const tasks = getData('tasks');
+  
+  let roleLabel = 'User';
+  let roleColor = 'var(--accent-dim)';
+  let roleTextColor = 'var(--accent)';
+  let roleIcon = 'fa-user';
+  
+  if (user.isAdmin) {
+    roleLabel = 'Administrator';
+    roleColor = 'var(--danger-dim)';
+    roleTextColor = 'var(--danger)';
+    roleIcon = 'fa-user-shield';
+  } else if (user.role === 'client') {
+    roleLabel = 'Pemberi Tugas';
+    roleColor = 'var(--accent-dim)';
+    roleTextColor = 'var(--accent)';
+    roleIcon = 'fa-user-tie';
+  } else {
+    roleLabel = 'Pengerja Tugas';
+    roleColor = 'var(--info-dim)';
+    roleTextColor = 'var(--info)';
+    roleIcon = 'fa-laptop-code';
+  }
+
+  const isClient = user.role === 'client';
+  const relatedTasks = tasks.filter(t => isClient ? t.clientId === user.id : t.workerId === user.id);
+  const completedCount = relatedTasks.filter(t => t.status === 'completed').length;
+
+  content.innerHTML = `
+    <div class="max-w-2xl animate-in">
+      <!-- Profile header -->
+      <div class="stat-card mb-6 text-center">
+        <div class="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl font-bold" style="background:${roleColor};color:${roleTextColor};">
+          ${user.name.charAt(0)}
+        </div>
+        <h3 class="text-2xl font-bold mb-1">${user.name}</h3>
+        <p class="text-sm mb-3" style="color:var(--muted);">${user.email}</p>
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-lg" style="background:${roleColor};color:${roleTextColor};">
+          <i class="fas ${roleIcon}"></i>
+          <span class="font-semibold text-sm">${roleLabel}</span>
+        </div>
+      </div>
+
+      <!-- Stats grid -->
+      <div class="grid grid-cols-3 gap-4 mb-6">
+        <div class="stat-card text-center">
+          <div class="text-2xl font-bold" style="color:var(--gold);">${user.rating || '-'}</div>
+          <div class="text-xs mt-1" style="color:var(--muted);">Rating</div>
+        </div>
+        <div class="stat-card text-center">
+          <div class="text-2xl font-bold" style="color:var(--accent);">${completedCount}</div>
+          <div class="text-xs mt-1" style="color:var(--muted);">Selesai</div>
+        </div>
+        <div class="stat-card text-center">
+          <div class="text-2xl font-bold">${formatRupiah(user.balance)}</div>
+          <div class="text-xs mt-1" style="color:var(--muted);">Saldo</div>
+        </div>
+      </div>
+
+      <!-- Edit profile -->
+      <div class="stat-card">
+        <h3 class="text-lg font-bold mb-4">Edit Profil</h3>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold mb-2" style="color:var(--muted);">NAMA</label>
+            <input type="text" id="editName" class="form-input" value="${user.name}">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold mb-2" style="color:var(--muted);">EMAIL</label>
+            <input type="email" id="editEmail" class="form-input" value="${user.email}" disabled style="opacity:0.5;">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold mb-2" style="color:var(--muted);">PASSWORD BARU</label>
+            <input type="password" id="editPassword" class="form-input" placeholder="Kosongkan jika tidak ingin mengubah">
+          </div>
+          <button onclick="saveProfile()" class="btn-primary w-full">Simpan Perubahan</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function saveProfile() {
+  const name = document.getElementById('editName').value.trim();
+  const password = document.getElementById('editPassword').value;
+  if (!name) return toast('Nama tidak boleh kosong', 'error');
+
+  const users = getData('users');
+  const user = users.find(u => u.id === currentUser.id);
+  user.name = name;
+  if (password && password.length >= 6) user.password = password;
+  else if (password && password.length < 6) return toast('Password minimal 6 karakter', 'error');
+  setData('users', users);
+  currentUser = user;
+  updateTopBar();
+  toast('Profil berhasil diperbarui!', 'success');
+}
+
+// ========================================
+// INIT
+// ========================================
+function init() {
+  seedData();
+
+  // Cek session
+  const session = localStorage.getItem('jt_session');
+  if (session) {
+    const users = getData('users');
+    const user = users.find(u => u.id === session);
+    if (user) {
+      currentUser = user;
+      showApp();
+      return;
+    }
+  }
+}
+
+// Jalankan init
+init();
+
+// Enter key support
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    if (document.getElementById('authPage').style.display !== 'none') {
+      if (document.getElementById('loginForm').style.display !== 'none') handleLogin();
+      else handleRegister();
+    }
+  }
+});
+</script>
+</body>
+</html>

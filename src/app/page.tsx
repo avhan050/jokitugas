@@ -1,23 +1,25 @@
-import Navbar from '@/components/Navbar';
-import HeroSection from '@/components/HeroSection';
-import StatsSection from '@/components/StatsSection';
-import FeaturesSection from '@/components/FeaturesSection';
-import HowItWorksSection from '@/components/HowItWorksSection';
-import CTASection from '@/components/CTASection';
-import Footer from '@/components/Footer';
+'use client';
+
+import { useEffect } from 'react';
+import { useAppStore } from '@/lib/store';
+import AuthPage from '@/components/app/AuthPage';
+import AppLayout from '@/components/app/AppLayout';
+import Modal from '@/components/app/Modal';
+import ToastContainer from '@/components/app/Toast';
 
 export default function Home() {
+  const { currentUser, _seedIfNeeded, _loadFromStorage } = useAppStore();
+
+  useEffect(() => {
+    _seedIfNeeded();
+    _loadFromStorage();
+  }, [_seedIfNeeded, _loadFromStorage]);
+
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#0B1120' }}>
-      <Navbar />
-      <main className="flex-1">
-        <HeroSection />
-        <StatsSection />
-        <FeaturesSection />
-        <HowItWorksSection />
-        <CTASection />
-      </main>
-      <Footer />
+    <div className="min-h-screen" style={{ background: '#0B1120' }}>
+      {currentUser ? <AppLayout /> : <AuthPage />}
+      <Modal />
+      <ToastContainer />
     </div>
   );
 }

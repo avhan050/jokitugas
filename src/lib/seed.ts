@@ -1,0 +1,280 @@
+import { genId } from './helpers';
+import type { User, Task, Transaction, AdminSettings } from './types';
+
+const now = new Date().toISOString();
+const day = 86400000;
+
+export function createSeedData(): {
+  users: User[];
+  tasks: Task[];
+  transactions: Transaction[];
+  adminSettings: AdminSettings;
+} {
+  const users: User[] = [
+    {
+      id: 'admin1',
+      name: 'Admin JokiTugas',
+      email: 'admin@jokitugas.id',
+      password: 'admin123',
+      role: 'admin',
+      balance: 0,
+      rating: 0,
+      completedJobs: 0,
+      createdAt: new Date(now).toISOString(),
+      isAdmin: true,
+    },
+    {
+      id: 'client1',
+      name: 'Andi Pratama',
+      email: 'andi@email.com',
+      password: 'andi123',
+      role: 'client',
+      balance: 850000,
+      rating: 5.0,
+      completedJobs: 3,
+      createdAt: new Date(Date.now() - 30 * day).toISOString(),
+    },
+    {
+      id: 'worker1',
+      name: 'Budi Santoso',
+      email: 'budi@email.com',
+      password: 'budi123',
+      role: 'worker',
+      balance: 1750000,
+      rating: 4.9,
+      completedJobs: 12,
+      createdAt: new Date(Date.now() - 45 * day).toISOString(),
+    },
+    {
+      id: 'client2',
+      name: 'Citra Dewi',
+      email: 'citra@email.com',
+      password: 'citra123',
+      role: 'client',
+      balance: 500000,
+      rating: 4.8,
+      completedJobs: 7,
+      createdAt: new Date(Date.now() - 20 * day).toISOString(),
+    },
+    {
+      id: 'worker2',
+      name: 'Dimas Kurniawan',
+      email: 'dimas@email.com',
+      password: 'dimas123',
+      role: 'worker',
+      balance: 950000,
+      rating: 4.7,
+      completedJobs: 8,
+      createdAt: new Date(Date.now() - 15 * day).toISOString(),
+    },
+  ];
+
+  const tasks: Task[] = [
+    {
+      id: 'task1',
+      clientId: 'client1',
+      title: 'Buat Aplikasi React Native Sederhana',
+      description:
+        'Dibutuhkan aplikasi React Native sederhana untuk manajemen tugas harian. Fitur: CRUD tugas, kategori, deadline, notifikasi. Desain modern dan responsif.',
+      category: 'Pemrograman',
+      deadline: new Date(Date.now() + 14 * day).toISOString(),
+      budget: 350000,
+      status: 'open',
+      workerId: null,
+      createdAt: new Date(Date.now() - 2 * day).toISOString(),
+      completedAt: null,
+      clientRating: null,
+      workerRating: null,
+      escrowHeld: false,
+    },
+    {
+      id: 'task2',
+      clientId: 'client1',
+      title: 'Desain Logo untuk Startup',
+      description:
+        'Membutuhkan desain logo profesional untuk startup teknologi edukasi. Nama brand: EduTech ID. Warna: hijau & biru. Format: PNG, SVG, AI.',
+      category: 'Desain Grafis',
+      deadline: new Date(Date.now() + 7 * day).toISOString(),
+      budget: 200000,
+      status: 'in_progress',
+      workerId: 'worker2',
+      createdAt: new Date(Date.now() - 5 * day).toISOString(),
+      completedAt: null,
+      clientRating: null,
+      workerRating: null,
+      escrowHeld: true,
+      takenAt: new Date(Date.now() - 3 * day).toISOString(),
+    },
+    {
+      id: 'task3',
+      clientId: 'client2',
+      title: 'Penulisan Artikel SEO tentang Kesehatan',
+      description:
+        'Dibutuhkan 5 artikel SEO tentang kesehatan mental, masing-masing 1000-1500 kata. Keyword akan diberikan. Bahasa Indonesia yang baik dan benar.',
+      category: 'Penulisan',
+      deadline: new Date(Date.now() + 10 * day).toISOString(),
+      budget: 500000,
+      status: 'under_review',
+      workerId: 'worker1',
+      createdAt: new Date(Date.now() - 8 * day).toISOString(),
+      completedAt: null,
+      clientRating: null,
+      workerRating: null,
+      escrowHeld: true,
+      takenAt: new Date(Date.now() - 6 * day).toISOString(),
+      submissionNote: 'Semua 5 artikel sudah selesai, terlampir dalam dokumen.',
+    },
+    {
+      id: 'task4',
+      clientId: 'client2',
+      title: 'Tugas Matematika Kalkulus Lanjut',
+      description:
+        'Mengerjakan 20 soal kalkulus lanjut (integral & diferensial). Harus disertai langkah penyelesaian yang lengkap dan jelas.',
+      category: 'Matematika',
+      deadline: new Date(Date.now() + 3 * day).toISOString(),
+      budget: 150000,
+      status: 'completed',
+      workerId: 'worker1',
+      createdAt: new Date(Date.now() - 12 * day).toISOString(),
+      completedAt: new Date(Date.now() - 4 * day).toISOString(),
+      clientRating: 5,
+      workerRating: 5,
+      escrowHeld: false,
+      takenAt: new Date(Date.now() - 10 * day).toISOString(),
+    },
+    {
+      id: 'task5',
+      clientId: 'client1',
+      title: 'Presentasi Bisnis Plan untuk Investor',
+      description:
+        'Buat presentasi PowerPoint bisnis plan (15-20 slide) untuk startup marketplace UMKM. Tema profesional, data-driven, dengan grafik & infografis.',
+      category: 'Presentasi',
+      deadline: new Date(Date.now() + 5 * day).toISOString(),
+      budget: 300000,
+      status: 'open',
+      workerId: null,
+      createdAt: new Date(Date.now() - 1 * day).toISOString(),
+      completedAt: null,
+      clientRating: null,
+      workerRating: null,
+      escrowHeld: false,
+    },
+  ];
+
+  const transactions: Transaction[] = [
+    {
+      id: 'tx1',
+      userId: 'client1',
+      type: 'topup',
+      amount: 1000000,
+      taskId: null,
+      createdAt: new Date(Date.now() - 25 * day).toISOString(),
+      desc: 'Top up saldo',
+      status: 'approved',
+      note: 'Transfer BCA',
+    },
+    {
+      id: 'tx2',
+      userId: 'client1',
+      type: 'escrow',
+      amount: -200000,
+      taskId: 'task2',
+      createdAt: new Date(Date.now() - 5 * day).toISOString(),
+      desc: 'Escrow: Desain Logo untuk Startup',
+      status: 'approved',
+    },
+    {
+      id: 'tx3',
+      userId: 'client2',
+      type: 'topup',
+      amount: 1000000,
+      taskId: null,
+      createdAt: new Date(Date.now() - 18 * day).toISOString(),
+      desc: 'Top up saldo',
+      status: 'approved',
+      note: 'Transfer Mandiri',
+    },
+    {
+      id: 'tx4',
+      userId: 'client2',
+      type: 'escrow',
+      amount: -150000,
+      taskId: 'task4',
+      createdAt: new Date(Date.now() - 12 * day).toISOString(),
+      desc: 'Escrow: Tugas Matematika Kalkulus Lanjut',
+      status: 'approved',
+    },
+    {
+      id: 'tx5',
+      userId: 'worker1',
+      type: 'earning',
+      amount: 142500,
+      taskId: 'task4',
+      createdAt: new Date(Date.now() - 4 * day).toISOString(),
+      desc: 'Pendapatan: Tugas Matematika Kalkulus Lanjut',
+      status: 'approved',
+    },
+    {
+      id: 'tx6',
+      userId: 'worker1',
+      type: 'fee',
+      amount: -7500,
+      taskId: 'task4',
+      createdAt: new Date(Date.now() - 4 * day).toISOString(),
+      desc: 'Biaya layanan: Tugas Matematika Kalkulus Lanjut',
+      status: 'approved',
+    },
+    {
+      id: 'tx7',
+      userId: 'client2',
+      type: 'escrow',
+      amount: -500000,
+      taskId: 'task3',
+      createdAt: new Date(Date.now() - 8 * day).toISOString(),
+      desc: 'Escrow: Penulisan Artikel SEO tentang Kesehatan',
+      status: 'approved',
+    },
+    {
+      id: 'tx8',
+      userId: 'worker2',
+      type: 'topup',
+      amount: 500000,
+      taskId: null,
+      createdAt: new Date(Date.now() - 1 * day).toISOString(),
+      desc: 'Top up saldo',
+      status: 'pending',
+      note: 'Transfer BNI',
+      proofUrl: '',
+    },
+  ];
+
+  const adminSettings: AdminSettings = {
+    bank_name: 'Bank BCA',
+    bank_account: '1234567890',
+    bank_owner: 'PT JokiTugas Indonesia',
+    e_wallet: 'jokitugas@ovo.id',
+  };
+
+  return { users, tasks, transactions, adminSettings };
+}
+
+export const DEMO_ACCOUNTS = [
+  {
+    email: 'andi@email.com',
+    password: 'andi123',
+    label: 'Client Demo',
+    name: 'Andi Pratama',
+  },
+  {
+    email: 'budi@email.com',
+    password: 'budi123',
+    label: 'Joki Demo',
+    name: 'Budi Santoso',
+  },
+  {
+    email: 'admin@jokitugas.id',
+    password: 'admin123',
+    label: 'Admin Demo',
+    name: 'Admin',
+  },
+];
