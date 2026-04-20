@@ -2,8 +2,7 @@ import React from 'react';
 import { create } from 'zustand';
 import type { User, Task, Transaction, ToastItem, AdminSettings, PageName, PublicStats } from './types';
 import { genId } from './helpers';
-import { supabase } from './supabase';
-import { RealtimeChannel } from '@supabase/supabase-js';
+import { io, Socket } from 'socket.io-client';
 
 interface AppState {
   // Session
@@ -25,10 +24,11 @@ interface AppState {
   toasts: ToastItem[];
   
   // Real-time
-  channel: RealtimeChannel | null;
+  socket: Socket | null;
 
   // Actions - Session
   login: (email: string, password: string) => Promise<boolean>;
+  register: (name: string, email: string, password: string, role: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   setPage: (page: PageName) => void;
   setShowAuth: (show: boolean) => void;
@@ -63,6 +63,7 @@ interface AppState {
   
   // Real-time
   initRealtime: (userId: string) => void;
+  emitDataUpdate: (type: string) => void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -88,63 +89,46 @@ export const useAppStore = create<AppState>((set, get) => ({
   modalOpen: false,
   modalContent: null,
   toasts: [],
-  channel: null,
+  socket: null,
 
   initRealtime: (userId) => {
-    if (get().channel) return;
+    if (get().socket) return;
 
-    const channel = supabase
-      .channel('db-changes')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'Task' },
-        (payload) => {
-          get().refreshData();
-          get().addToast(`Tugas baru tersedia: ${payload.new.title}`, 'info');
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'Task' },
-        (payload) => {
-          get().refreshData();
-          // Notify client if worker took task
-          if (payload.old.status === 'open' && payload.new.status === 'in_progress' && payload.new.clientId === userId) {
-             get().addToast(`Tugas "${payload.new.title}" Anda telah diambil oleh pekerja.`, 'info');
-          }
-          // Notify client if worker submitted work
-          if (payload.old.status === 'in_progress' && payload.new.status === 'under_review' && payload.new.clientId === userId) {
-             get().addToast(`Pekerja telah mengirimkan hasil untuk tugas "${payload.new.title}".`, 'info');
-          }
-          // Notify worker if client reviewed work
-          if (payload.old.status === 'under_review' && payload.new.workerId === userId) {
-            const msgs: Record<string, string> = { 
-              completed: `Tugas "${payload.new.title}" diterima! Saldo bertambah.`, 
-              in_progress: `Client meminta revisi untuk tugas "${payload.new.title}".`, 
-              cancelled: `Client menolak hasil kerja untuk tugas "${payload.new.title}".` 
-            };
-            if (msgs[payload.new.status]) {
-              get().addToast(msgs[payload.new.status], payload.new.status === 'completed' ? 'success' : 'warning');
-            }
-          }
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'Transaction', filter: `userId=eq.${userId}` },
-        (payload) => {
-          get().refreshData();
-          if (payload.old.status === 'pending' && payload.new.status !== 'pending') {
-            const type = payload.new.type === 'topup' ? 'Top Up' : 'Penarikan';
-            const msg = `Transaksi ${type} senilai ${payload.new.amount} telah ${payload.new.status === 'approved' ? 'disetujui' : 'ditolak'}.`;
-            get().addToast(msg, payload.new.status === 'approved' ? 'success' : 'warning');
-          }
-        }
-      )
-      .subscribe();
+    // Detect if we're on port 3000, if so, point directly to 3003 for socket
+    let socketUrl = '/?XTransformPort=3003';
+    if (typeof window !== 'undefined' && (window.location.port === '3000' || !window.location.port)) {
+      socketUrl = `${window.location.protocol}//${window.location.hostname}:3003`;
+    }
 
-    set({ channel });
+    const newSocket = io(socketUrl, {
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      path: '/socket.io/',
+    });
+
+    newSocket.on('connect', () => {
+      console.log('Real-time connected to:', socketUrl);
+      newSocket.emit('join-user', userId);
+    });
+
+    newSocket.on('refresh-required', (data) => {
+      console.log('Real-time refresh trigger:', data);
+      get().refreshData();
+      if (data.message) {
+        get().addToast(data.message, 'info');
+      }
+    });
+
+    set({ socket: newSocket });
   },
+
+  emitDataUpdate: (type: string, message?: string) => {
+    const socket = get().socket;
+    if (socket) {
+      socket.emit('data-updated', { type, message, timestamp: Date.now() });
+    }
+  },
+
 
   fetchInitData: async () => {
     try {
@@ -183,13 +167,31 @@ export const useAppStore = create<AppState>((set, get) => ({
       const data = await res.json();
       if (res.ok) {
         set({ currentUser: data.user, currentPage: 'dashboard' });
-        get().initRealtime(data.user.id);
         await get().refreshData();
         return true;
       }
       return false;
     } catch (error) {
       return false;
+    }
+  },
+
+  register: async (name, email, password, role) => {
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password, role }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        set({ currentUser: data.user, currentPage: 'dashboard' });
+        await get().refreshData();
+        return { success: true };
+      }
+      return { success: false, error: data.error };
+    } catch (error) {
+      return { success: false, error: 'Koneksi gagal' };
     }
   },
 
@@ -243,6 +245,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       const data = await res.json();
       if (res.ok) {
         await get().refreshData();
+        get().emitDataUpdate('tasks', 'Ada tugas baru di Marketplace!');
         get().addToast('Tugas berhasil diposting!', 'success');
         return true;
       }
@@ -259,6 +262,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       const data = await res.json();
       if (res.ok) {
         await get().refreshData();
+        get().emitDataUpdate('tasks', 'Tugas Anda telah diambil oleh Joki.');
         get().addToast('Tugas berhasil diambil!', 'success');
         return true;
       }
@@ -279,6 +283,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       const data = await res.json();
       if (res.ok) {
         await get().refreshData();
+        get().emitDataUpdate('tasks', 'Joki telah mengirimkan hasil kerja tugas Anda.');
         get().addToast('Hasil kerja berhasil dikirim!', 'success');
         return true;
       }
@@ -300,6 +305,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       if (res.ok) {
         await get().refreshData();
         const msgs = { accept: 'Tugas selesai!', revision: 'Revisi dikirim!', reject: 'Tugas dibatalkan & refund diproses' };
+        const socketMsgs = { accept: 'Tugas Anda telah diterima oleh Client!', revision: 'Client meminta revisi untuk tugas Anda.', reject: 'Tugas dibatalkan oleh Client.' };
+        get().emitDataUpdate('tasks', socketMsgs[action]);
         get().addToast(msgs[action], 'success');
         return true;
       }
@@ -353,6 +360,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       });
       if (res.ok) {
         await get().refreshData();
+        get().emitDataUpdate('transactions');
         get().addToast('Permintaan top up dikirim!', 'success');
         return true;
       }
@@ -371,6 +379,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       });
       if (res.ok) {
         await get().refreshData();
+        get().emitDataUpdate('transactions');
         get().addToast('Permintaan penarikan dikirim!', 'success');
         return true;
       }
@@ -389,6 +398,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       });
       if (res.ok) {
         await get().refreshData();
+        get().emitDataUpdate('transactions', 'Permintaan saldo telah disetujui!');
         get().addToast('Transaksi disetujui!', 'success');
         return true;
       }
@@ -407,6 +417,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       });
       if (res.ok) {
         await get().refreshData();
+        get().emitDataUpdate('transactions', 'Permintaan saldo ditolak.');
         get().addToast('Transaksi ditolak', 'warning');
         return true;
       }

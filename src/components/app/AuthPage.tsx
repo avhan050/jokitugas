@@ -6,7 +6,7 @@ import { DEMO_ACCOUNTS } from '@/lib/seed';
 import { Zap, Mail, Lock, User, UserCheck, HardHat, ShieldUser, ArrowLeft } from 'lucide-react';
 
 export default function AuthPage() {
-  const { login, setShowAuth } = useAppStore();
+  const { login, register, setShowAuth } = useAppStore();
   const [tab, setTab] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -15,6 +15,10 @@ export default function AuthPage() {
   const [error, setError] = useState('');
 
   const handleLogin = async () => {
+    if (!email || !password) {
+      setError('Email dan password harus diisi');
+      return;
+    }
     setError('');
     const success = await login(email, password);
     if (!success) {
@@ -22,8 +26,24 @@ export default function AuthPage() {
     }
   };
 
-  const handleRegister = () => {
-    setError('Fitur pendaftaran saat ini hanya tersedia via Admin');
+  const handleRegister = async () => {
+    if (!name || !email || !password) {
+      setError('Semua data harus diisi');
+      return;
+    }
+    if (password.length < 6) {
+      setError('Password minimal 6 karakter');
+      return;
+    }
+    setError('');
+    const result = await register(name, email, password, role);
+    if (!result.success) {
+      if (result.error === 'Email already exists') {
+        setError('Email sudah terdaftar. Gunakan email lain.');
+      } else {
+        setError(result.error || 'Gagal mendaftar. Silakan coba lagi.');
+      }
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

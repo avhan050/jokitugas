@@ -31,7 +31,7 @@ export default function SubmitWorkModal({ taskId }: { taskId: string }) {
       addToast('File hasil joki berhasil diupload', 'success');
     } catch (error) {
       console.error('Upload error:', error);
-      addToast('Gagal upload file. Pastikan Supabase Storage sudah dikonfigurasi.', 'error');
+      addToast('Gagal memproses file hasil joki.', 'error');
     } finally {
       setIsUploading(false);
     }

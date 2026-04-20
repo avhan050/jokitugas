@@ -1,26 +1,21 @@
-import { createClient } from '@supabase/supabase-js';
+// Supabase connection removed to support local-only mode with Base64
+export const supabase = {
+  channel: () => ({ on: () => ({ subscribe: () => ({ unsubscribe: () => {} }) }) }),
+  storage: { from: () => ({ upload: async () => ({ data: null, error: new Error('Supabase disabled') }), getPublicUrl: () => ({ data: { publicUrl: '' } }) }) }
+} as any;
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-export const uploadFile = async (file: File, bucket: string = 'uploads') => {
-  const fileExt = file.name.split('.').pop();
-  const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
-  const filePath = `${fileName}`;
-
-  const { data, error } = await supabase.storage
-    .from(bucket)
-    .upload(filePath, file);
-
-  if (error) {
-    throw error;
-  }
-
-  const { data: publicData } = supabase.storage
-    .from(bucket)
-    .getPublicUrl(filePath);
-
-  return publicData.publicUrl;
+/**
+ * Mengonversi file menjadi Base64 string agar bisa disimpan di SQLite
+ * Tanpa memerlukan layanan storage eksternal seperti Supabase.
+ */
+export const uploadFile = async (file: File, bucket: string = 'uploads'): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = (error) => {
+      console.error('Base64 conversion error:', error);
+      reject(error);
+    };
+  });
 };

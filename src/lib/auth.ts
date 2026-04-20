@@ -43,7 +43,7 @@ export async function setSession(token: string) {
   const cookieStore = await cookies();
   cookieStore.set('jt_token', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: false, // Set to false for local network testing (HTTP)
     sameSite: 'lax',
     path: '/',
     maxAge: 60 * 60 * 24, // 1 day

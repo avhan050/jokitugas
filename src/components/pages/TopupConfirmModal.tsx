@@ -37,7 +37,7 @@ export default function TopupConfirmModal({ amount, note, onConfirm }: TopupConf
       addToast('Bukti berhasil diupload', 'success');
     } catch (error) {
       console.error('Upload error:', error);
-      addToast('Gagal upload bukti. Pastikan Supabase Storage sudah dikonfigurasi.', 'error');
+      addToast('Gagal memproses file bukti.', 'error');
     } finally {
       setIsUploading(false);
     }
