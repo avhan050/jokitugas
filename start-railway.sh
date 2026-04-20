@@ -10,7 +10,12 @@ echo "Starting Socket Server..."
 cd mini-services/socket-server && node index.mjs &
 cd ../..
 
-# 3. Jalankan Next.js (Standalone mode)
+# 3. Persiapkan file statis untuk Standalone Mode
+echo "Syncing static assets..."
+cp -r .next/static .next/standalone/.next/ || true
+cp -r public .next/standalone/ || true
+
+# 4. Jalankan Next.js (Standalone mode)
 echo "Starting Next.js..."
 # Railway menyediakan variabel PORT secara otomatis
-PORT=$PORT node .next/standalone/server.js
+HOSTNAME="0.0.0.0" PORT=$PORT node .next/standalone/server.js
