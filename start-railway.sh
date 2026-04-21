@@ -5,6 +5,18 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_DIR="$SCRIPT_DIR"
 cd "$APP_DIR"
 
+if [ -z "${DATABASE_URL:-}" ]; then
+  if [ -d "/data" ]; then
+    mkdir -p /data
+    export DATABASE_URL="file:/data/dev.db"
+  else
+    mkdir -p "$APP_DIR/prisma"
+    export DATABASE_URL="file:$APP_DIR/prisma/dev.db"
+  fi
+fi
+
+echo "Using DATABASE_URL=${DATABASE_URL}"
+
 # 1. Jalankan migrasi database ke Volume permanen
 echo "Syncing database..."
 npx prisma generate

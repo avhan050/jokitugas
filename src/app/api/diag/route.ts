@@ -14,8 +14,7 @@ export async function GET() {
 
     // 3. Check ENV presence (masked)
     const envStatus = {
-      DB_URL: !!process.env.DB_URL,
-      DIRECT_DB_URL: !!process.env.DIRECT_DB_URL,
+      DATABASE_URL: !!process.env.DATABASE_URL,
       JWT_SECRET: !!process.env.JWT_SECRET,
       NODE_ENV: process.env.NODE_ENV
     };
@@ -35,8 +34,7 @@ export async function GET() {
       message: error.message,
       stack: error.stack,
       env_check: {
-        DB_URL_PREFIX: process.env.DB_URL?.substring(0, 15),
-        DIRECT_DB_URL_PREFIX: process.env.DIRECT_DB_URL?.substring(0, 15),
+        DATABASE_URL_PREFIX: process.env.DATABASE_URL?.substring(0, 30),
       }
     }, { status: 500 });
   }
