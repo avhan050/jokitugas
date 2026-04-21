@@ -31,26 +31,9 @@ async function main() {
     password: 'admin123',
     role: 'admin',
     isAdmin: true,
-  });
-
-  await upsertDemoUser({
-    name: 'Andi Pratama',
-    email: 'andi@email.com',
-    password: 'andi123',
-    role: 'client',
-    balance: 850000,
-    rating: 5,
-    completedJobs: 3,
-  });
-
-  await upsertDemoUser({
-    name: 'Budi Santoso',
-    email: 'budi@email.com',
-    password: 'budi123',
-    role: 'worker',
-    balance: 1750000,
-    rating: 4.9,
-    completedJobs: 12,
+    balance: 0,
+    rating: 0,
+    completedJobs: 0,
   });
 
   await prisma.adminSettings.upsert({
@@ -65,7 +48,7 @@ async function main() {
     },
   });
 
-  console.log('Demo accounts ensured.');
+  console.log('Initial admin account ensured.');
 }
 
 main()

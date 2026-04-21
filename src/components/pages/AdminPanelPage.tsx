@@ -12,12 +12,16 @@ import {
   Users,
   ListChecks,
   Clock,
+  Download,
+  Upload,
+  Database,
 } from 'lucide-react';
 
 export default function AdminPanelPage() {
-  const { transactions, users, tasks, adminSettings, approveTransaction, rejectTransaction, updateAdminSettings, addToast, openModal, closeModal, pageState } = useAppStore();
+  const { transactions, users, tasks, adminSettings, approveTransaction, rejectTransaction, updateAdminSettings, addToast, openModal, closeModal, pageState, refreshData } = useAppStore();
   const overviewRef = useRef<HTMLDivElement>(null);
   const pendingRef = useRef<HTMLDivElement>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   const pendingTx = transactions
     .filter((t) => t.status === 'pending' && (t.type === 'topup' || t.type === 'withdraw'))
@@ -33,6 +37,8 @@ export default function AdminPanelPage() {
   const [bankAccount, setBankAccount] = useState(adminSettings.bank_account);
   const [bankOwner, setBankOwner] = useState(adminSettings.bank_owner);
   const [eWallet, setEWallet] = useState(adminSettings.e_wallet);
+  const [isBackingUp, setIsBackingUp] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
 
   const handleSaveSettings = () => {
     updateAdminSettings({
@@ -47,6 +53,80 @@ export default function AdminPanelPage() {
   const getUserName = (userId: string) => {
     const u = users.find((u) => u.id === userId);
     return u?.name || 'Unknown';
+  };
+
+  const handleBackupDatabase = async () => {
+    try {
+      setIsBackingUp(true);
+      const res = await fetch('/api/admin/database/backup');
+
+      if (!res.ok) {
+        const data = await res.json();
+        addToast(data.error || 'Gagal membuat backup database', 'error');
+        return;
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const disposition = res.headers.get('Content-Disposition');
+      const fileName = disposition?.match(/filename="(.+)"/)?.[1] || `jokitugas-backup-${new Date().toISOString().slice(0, 10)}.json`;
+
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+
+      addToast('Backup database berhasil diunduh.', 'success');
+    } catch (error) {
+      console.error('Backup database error:', error);
+      addToast('Gagal membuat backup database.', 'error');
+    } finally {
+      setIsBackingUp(false);
+    }
+  };
+
+  const handleImportDatabase = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const confirmed = window.confirm(
+      'Import database akan mengganti seluruh data aplikasi saat ini. Lanjutkan?'
+    );
+
+    if (!confirmed) {
+      event.target.value = '';
+      return;
+    }
+
+    try {
+      setIsImporting(true);
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch('/api/admin/database/import', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        addToast(data.error || 'Gagal import database', 'error');
+        return;
+      }
+
+      await refreshData();
+      addToast(data.message || 'Database berhasil diimport.', 'success');
+    } catch (error) {
+      console.error('Import database error:', error);
+      addToast('Gagal import database.', 'error');
+    } finally {
+      setIsImporting(false);
+      event.target.value = '';
+    }
   };
 
   useEffect(() => {
@@ -157,6 +237,61 @@ export default function AdminPanelPage() {
           </button>
         </div>
       )}
+
+      <div
+        className="rounded-2xl p-6 space-y-4"
+        style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
+      >
+        <div className="flex items-center gap-3">
+          <div
+            className="w-11 h-11 rounded-xl flex items-center justify-center"
+            style={{ background: 'var(--accent-dim)' }}
+          >
+            <Database size={22} style={{ color: 'var(--accent)' }} />
+          </div>
+          <div>
+            <h3 className="font-bold" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+              Backup & Import Database
+            </h3>
+            <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+              Backup akan mengunduh seluruh data aplikasi dalam file JSON. Import akan mengganti semua data saat ini dengan isi file backup.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-3">
+          <button
+            onClick={handleBackupDatabase}
+            disabled={isBackingUp || isImporting}
+            className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-bold transition-all disabled:opacity-60"
+            style={{ background: 'var(--accent)', color: '#0B1120' }}
+          >
+            <Download size={18} />
+            {isBackingUp ? 'Menyiapkan Backup...' : 'Backup Database'}
+          </button>
+
+          <input
+            ref={importInputRef}
+            type="file"
+            accept="application/json"
+            className="hidden"
+            onChange={handleImportDatabase}
+          />
+          <button
+            onClick={() => importInputRef.current?.click()}
+            disabled={isBackingUp || isImporting}
+            className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-bold transition-all disabled:opacity-60"
+            style={{ background: 'var(--bg)', color: 'var(--fg)', border: '1px solid var(--border)' }}
+          >
+            <Upload size={18} />
+            {isImporting ? 'Mengimport Backup...' : 'Import Database'}
+          </button>
+        </div>
+
+        <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
+          Simpan file backup dengan aman. File ini berisi seluruh data aplikasi, termasuk akun pengguna dan transaksi.
+        </p>
+      </div>
 
       {/* Pending transactions */}
       <div ref={pendingRef}>

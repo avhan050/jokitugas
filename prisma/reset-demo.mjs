@@ -24,6 +24,13 @@ async function upsertUser(data) {
 async function main() {
   await prisma.transaction.deleteMany();
   await prisma.task.deleteMany();
+  await prisma.user.deleteMany({
+    where: {
+      role: {
+        not: 'admin',
+      },
+    },
+  });
 
   await upsertUser({
     name: 'Admin JokiTugas',
@@ -34,28 +41,6 @@ async function main() {
     rating: 0,
     completedJobs: 0,
     isAdmin: true,
-  });
-
-  await upsertUser({
-    name: 'Andi Pratama',
-    email: 'andi@email.com',
-    password: 'andi123',
-    role: 'client',
-    balance: 850000,
-    rating: 5,
-    completedJobs: 3,
-    isAdmin: false,
-  });
-
-  await upsertUser({
-    name: 'Budi Santoso',
-    email: 'budi@email.com',
-    password: 'budi123',
-    role: 'worker',
-    balance: 1750000,
-    rating: 4.9,
-    completedJobs: 12,
-    isAdmin: false,
   });
 
   await prisma.adminSettings.upsert({
@@ -75,7 +60,7 @@ async function main() {
     },
   });
 
-  console.log('Demo state reset.');
+  console.log('Application state reset to initial admin-only state.');
 }
 
 main()

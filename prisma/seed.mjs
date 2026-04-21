@@ -7,8 +7,6 @@ async function main() {
   console.log('Starting seed...');
   
   const hashedPassword = await bcrypt.hash('admin123', 10);
-  const andiPassword = await bcrypt.hash('andi123', 10);
-  const budiPassword = await bcrypt.hash('budi123', 10);
 
   // Clear existing data
   console.log('Cleaning up existing data...');
@@ -33,34 +31,6 @@ async function main() {
     },
   });
 
-  // Client
-  console.log('Creating client user...');
-  await prisma.user.create({
-    data: {
-      name: 'Andi Pratama',
-      email: 'andi@email.com',
-      password: andiPassword,
-      role: 'client',
-      balance: 850000,
-      rating: 5.0,
-      completedJobs: 3,
-    },
-  });
-
-  // Worker
-  console.log('Creating worker user...');
-  await prisma.user.create({
-    data: {
-      name: 'Budi Santoso',
-      email: 'budi@email.com',
-      password: budiPassword,
-      role: 'worker',
-      balance: 1750000,
-      rating: 4.9,
-      completedJobs: 12,
-    },
-  });
-
   // Admin Settings
   console.log('Creating admin settings...');
   await prisma.adminSettings.create({
@@ -73,7 +43,7 @@ async function main() {
     },
   });
 
-  console.log('Seed data created successfully');
+  console.log('Initial production data created successfully');
 }
 
 main()

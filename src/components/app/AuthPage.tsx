@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import { useAppStore } from '@/lib/store';
-import { DEMO_ACCOUNTS } from '@/lib/seed';
-import { Zap, Mail, Lock, User, UserCheck, HardHat, ShieldUser, ArrowLeft } from 'lucide-react';
+import { Zap, Mail, Lock, User, UserCheck, HardHat, ArrowLeft } from 'lucide-react';
 
 export default function AuthPage() {
   const { login, register, setShowAuth } = useAppStore();
@@ -52,19 +51,6 @@ export default function AuthPage() {
       else handleRegister();
     }
   };
-
-  const demoIcons = {
-    client: UserCheck,
-    worker: HardHat,
-    admin: ShieldUser,
-  } as const;
-
-  const demoColors: Record<string, string> = {
-    client: 'var(--info)',
-    worker: 'var(--accent)',
-    admin: 'var(--gold)',
-  };
-
   return (
     <div className="auth-bg min-h-screen flex items-center justify-center p-4">
       <div className="glow-orb" style={{ width: 300, height: 300, background: 'var(--accent)', top: '10%', left: '10%' }} />
@@ -103,7 +89,7 @@ export default function AuthPage() {
           <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
             {tab === 'login'
               ? 'Masuk ke akun Anda untuk melanjutkan'
-              : 'Daftar dan mulai gunakan JokiTugas'}
+              : 'Daftar akun baru sebelum mulai menggunakan JokiTugas'}
           </p>
         </div>
 
@@ -206,45 +192,6 @@ export default function AuthPage() {
             {tab === 'login' ? 'Masuk' : 'Daftar Sekarang'}
           </button>
         </div>
-
-        {/* Demo buttons */}
-        {tab === 'login' && (
-          <div className="mt-6 pt-6" style={{ borderTop: '1px solid var(--border)' }}>
-            <p className="text-xs text-center mb-3" style={{ color: 'var(--muted-foreground)' }}>
-              Akses cepat demo:
-            </p>
-            <div className="grid grid-cols-3 gap-2">
-              {DEMO_ACCOUNTS.map((acc) => {
-                const Icon = demoIcons[acc.label.toLowerCase().includes('joki') ? 'worker' : acc.label.toLowerCase().includes('admin') ? 'admin' : 'client'];
-                return (
-                  <button
-                    key={acc.email}
-                    onClick={async () => {
-                      setError('');
-                      setEmail(acc.email);
-                      setPassword(acc.password);
-                      const success = await login(acc.email, acc.password);
-                      if (!success) {
-                        setError('Gagal masuk ke akun demo. Silakan coba lagi.');
-                      }
-                    }}
-                    className="py-2 px-2 rounded-lg text-xs font-semibold transition-all"
-                    style={{
-                      background: 'var(--bg)',
-                      border: '1px solid var(--border)',
-                      color: demoColors[acc.label.toLowerCase().includes('joki') ? 'worker' : acc.label.toLowerCase().includes('admin') ? 'admin' : 'client'],
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.borderColor = demoColors[acc.label.toLowerCase().includes('joki') ? 'worker' : acc.label.toLowerCase().includes('admin') ? 'admin' : 'client'])}
-                    onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--border)')}
-                  >
-                    <Icon size={14} className="mx-auto mb-1" />
-                    {acc.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
