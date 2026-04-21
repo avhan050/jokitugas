@@ -23,7 +23,7 @@ export default function ProfilePage() {
     }
   };
 
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
     setPassError('');
     if (!oldPass || !newPass || !confirmPass) {
       setPassError('Semua field harus diisi');
@@ -37,7 +37,8 @@ export default function ProfilePage() {
       setPassError('Konfirmasi password tidak cocok');
       return;
     }
-    if (!changePassword(oldPass, newPass)) {
+    const success = await changePassword(oldPass, newPass);
+    if (!success) {
       setPassError('Password lama salah');
       return;
     }

@@ -15,10 +15,12 @@ import {
   Download,
   Upload,
   Database,
+  Lock,
+  Save,
 } from 'lucide-react';
 
 export default function AdminPanelPage() {
-  const { transactions, users, tasks, adminSettings, approveTransaction, rejectTransaction, updateAdminSettings, addToast, openModal, closeModal, pageState, refreshData } = useAppStore();
+  const { transactions, users, tasks, adminSettings, approveTransaction, rejectTransaction, updateAdminSettings, addToast, openModal, closeModal, pageState, refreshData, changePassword } = useAppStore();
   const overviewRef = useRef<HTMLDivElement>(null);
   const pendingRef = useRef<HTMLDivElement>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
@@ -39,6 +41,10 @@ export default function AdminPanelPage() {
   const [eWallet, setEWallet] = useState(adminSettings.e_wallet);
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
 
   const handleSaveSettings = () => {
     updateAdminSettings({
@@ -48,6 +54,35 @@ export default function AdminPanelPage() {
       e_wallet: eWallet,
     });
     setShowSettings(false);
+  };
+
+  const handleChangeAdminPassword = async () => {
+    setPasswordError('');
+
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      setPasswordError('Semua field password harus diisi.');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setPasswordError('Password baru minimal 6 karakter.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError('Konfirmasi password baru tidak cocok.');
+      return;
+    }
+
+    const success = await changePassword(oldPassword, newPassword);
+    if (!success) {
+      setPasswordError('Password admin saat ini salah.');
+      return;
+    }
+
+    setOldPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
   };
 
   const getUserName = (userId: string) => {
@@ -291,6 +326,74 @@ export default function AdminPanelPage() {
         <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
           Simpan file backup dengan aman. File ini berisi seluruh data aplikasi, termasuk akun pengguna dan transaksi.
         </p>
+      </div>
+
+      <div
+        className="rounded-2xl p-6 space-y-4"
+        style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
+      >
+        <div className="flex items-center gap-3">
+          <div
+            className="w-11 h-11 rounded-xl flex items-center justify-center"
+            style={{ background: 'var(--info-dim)' }}
+          >
+            <Lock size={22} style={{ color: 'var(--info)' }} />
+          </div>
+          <div>
+            <h3 className="font-bold" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+              Ubah Password Admin
+            </h3>
+            <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+              Gunakan fitur ini untuk mengganti password akun admin utama tanpa keluar dari panel admin.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-semibold mb-1">Password Saat Ini</label>
+            <input
+              type="password"
+              value={oldPassword}
+              onChange={(e) => setOldPassword(e.target.value)}
+              className="form-input"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold mb-1">Password Baru</label>
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="form-input"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold mb-1">Konfirmasi Password Baru</label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="form-input"
+              onKeyDown={(e) => e.key === 'Enter' && handleChangeAdminPassword()}
+            />
+          </div>
+        </div>
+
+        {passwordError && (
+          <p className="text-sm font-medium" style={{ color: 'var(--danger)' }}>
+            {passwordError}
+          </p>
+        )}
+
+        <button
+          onClick={handleChangeAdminPassword}
+          className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-bold transition-all"
+          style={{ background: 'var(--info)', color: '#fff' }}
+        >
+          <Save size={16} />
+          Simpan Password Admin Baru
+        </button>
       </div>
 
       {/* Pending transactions */}
