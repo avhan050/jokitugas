@@ -9,6 +9,7 @@ cd "$APP_DIR"
 echo "Syncing database..."
 npx prisma generate
 npx prisma db push
+node prisma/bootstrap-demo.mjs
 
 # 2. Jalankan Socket Server di background (Port 3003)
 echo "Starting Socket Server..."
