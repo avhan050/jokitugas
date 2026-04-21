@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 
+function formatRupiah(amount: number) {
+  return `Rp ${Math.ceil(amount).toLocaleString('id-ID')}`;
+}
+
 export async function GET() {
   try {
     const tasks = await db.task.findMany({
@@ -32,7 +36,10 @@ export async function POST(request: Request) {
 
     const totalFee = Math.ceil(budget * 1.05);
     if (user.balance < totalFee) {
-      return NextResponse.json({ error: 'Insufficient balance (budget + 5% service fee)' }, { status: 400 });
+      const shortfall = totalFee - user.balance;
+      return NextResponse.json({
+        error: `Saldo Anda belum cukup untuk posting tugas ini. Total yang dibutuhkan adalah ${formatRupiah(totalFee)} (budget + biaya layanan 5%), sedangkan saldo Anda saat ini ${formatRupiah(user.balance)}. Tambahkan saldo minimal ${formatRupiah(shortfall)} lagi lalu coba kembali.`,
+      }, { status: 400 });
     }
 
     // Transaction for fee and budget (escrow is usually held on take)
