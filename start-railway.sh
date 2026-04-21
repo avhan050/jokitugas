@@ -18,8 +18,13 @@ cd ../..
 # 3. Persiapkan file statis untuk Standalone Mode
 echo "Syncing static assets..."
 if [ ! -f ".next/standalone/server.js" ]; then
-  echo "Build output .next/standalone/server.js tidak ditemukan."
-  echo "Pastikan Railway Build Command menjalankan: npm run build"
+  echo "Build output .next/standalone/server.js tidak ditemukan. Menjalankan build sekarang..."
+  npm run build
+fi
+
+if [ ! -f ".next/standalone/server.js" ]; then
+  echo "Build output .next/standalone/server.js tetap tidak ditemukan setelah build."
+  echo "Periksa log build Railway untuk error Next.js."
   exit 1
 fi
 
