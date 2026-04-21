@@ -30,7 +30,7 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = process.env.PORT || 3003;
+const PORT = Number(process.env.SOCKET_PORT || process.env.INTERNAL_SOCKET_PORT || 3003);
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Socket.io server running on port ${PORT}`);
 });
