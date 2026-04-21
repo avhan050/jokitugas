@@ -2,7 +2,8 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+APP_DIR="$SCRIPT_DIR"
+cd "$APP_DIR"
 
 # 1. Jalankan migrasi database ke Volume permanen
 echo "Syncing database..."
@@ -12,13 +13,20 @@ npx prisma db push
 # 2. Jalankan Socket Server di background (Port 3003)
 echo "Starting Socket Server..."
 SOCKET_PORT="${SOCKET_PORT:-3003}"
-cd mini-services/socket-server && SOCKET_PORT="$SOCKET_PORT" node index.mjs &
-cd ../..
+if [ "${ENABLE_SOCKET_SERVER:-false}" = "true" ] && node -e "require.resolve('socket.io')" >/dev/null 2>&1; then
+  (
+    cd "$APP_DIR/mini-services/socket-server"
+    SOCKET_PORT="$SOCKET_PORT" node index.mjs
+  ) &
+else
+  echo "Socket server dilewati. Set ENABLE_SOCKET_SERVER=true jika ingin mengaktifkannya."
+fi
 
 # 3. Persiapkan file statis untuk Standalone Mode
 echo "Syncing static assets..."
 if [ ! -f ".next/standalone/server.js" ]; then
   echo "Build output .next/standalone/server.js tidak ditemukan. Menjalankan build sekarang..."
+  cd "$APP_DIR"
   npm run build
 fi
 
@@ -35,4 +43,5 @@ cp -r public .next/standalone/ || true
 # 4. Jalankan Next.js (Standalone mode)
 echo "Starting Next.js..."
 # Railway menyediakan variabel PORT secara otomatis
+cd "$APP_DIR"
 HOSTNAME="0.0.0.0" PORT="${PORT:-3000}" node .next/standalone/server.js

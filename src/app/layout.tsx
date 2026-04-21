@@ -1,19 +1,6 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
-
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
-
-const dmSans = DM_Sans({
-  variable: "--font-dm-sans",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-});
 
 export const metadata: Metadata = {
   title: "JokiTugas — Solusi Jasa Joki Tugas Terpercaya & Aman",
@@ -38,7 +25,7 @@ export default function RootLayout({
   return (
     <html lang="id" suppressHydrationWarning>
       <body
-        className={`${spaceGrotesk.variable} ${dmSans.variable} antialiased`}
+        className="antialiased"
         style={{ background: "#0B1120", color: "#E8ECF1" }}
       >
         {children}
