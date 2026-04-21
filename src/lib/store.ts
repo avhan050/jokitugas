@@ -57,7 +57,7 @@ interface AppState {
   createTopup: (userId: string, amount: number, note: string, proofUrl?: string) => Promise<boolean>;
   createWithdraw: (userId: string, amount: number, bankDetails: string) => Promise<boolean>;
   approveTransaction: (transactionId: string) => Promise<boolean>;
-  rejectTransaction: (transactionId: string) => Promise<boolean>;
+  rejectTransaction: (transactionId: string, reason: string) => Promise<boolean>;
   updateProfile: (name: string) => Promise<boolean>;
   changePassword: (oldPass: string, newPass: string) => Promise<boolean>;
   updateAdminSettings: (settings: AdminSettings) => Promise<boolean>;
@@ -415,12 +415,12 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-  rejectTransaction: async (transactionId) => {
+  rejectTransaction: async (transactionId, reason) => {
     try {
       const res = await fetch(`/api/transactions/${transactionId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'rejected' }),
+        body: JSON.stringify({ status: 'rejected', reason }),
       });
       if (res.ok) {
         await get().refreshData();

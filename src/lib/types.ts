@@ -42,6 +42,7 @@ export interface Transaction {
   status: 'pending' | 'approved' | 'rejected';
   proofUrl?: string;
   note?: string;
+  rejectionReason?: string;
   bankDetails?: string;
 }
 
@@ -83,4 +84,5 @@ export type PageName =
   | 'wallet'
   | 'transactions'
   | 'profile'
-  | 'admin';
+  | 'admin'
+  | 'admin-users';

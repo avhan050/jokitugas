@@ -21,7 +21,7 @@ export async function PATCH(
     }
 
     const { id: transactionId } = await params;
-    const { status } = await request.json(); // 'approved' or 'rejected'
+    const { status, reason } = await request.json(); // 'approved' or 'rejected'
 
     const tx = await db.transaction.findUnique({
       where: { id: transactionId },
@@ -35,7 +35,7 @@ export async function PATCH(
       await db.$transaction([
         db.transaction.update({
           where: { id: transactionId },
-          data: { status: 'approved' },
+          data: { status: 'approved', rejectionReason: null },
         }),
         db.user.update({
           where: { id: tx.userId },
@@ -47,9 +47,13 @@ export async function PATCH(
         }),
       ]);
     } else {
+      if (!reason || !String(reason).trim()) {
+        return NextResponse.json({ error: 'Alasan penolakan wajib diisi' }, { status: 400 });
+      }
+
       await db.transaction.update({
         where: { id: transactionId },
-        data: { status: 'rejected' },
+        data: { status: 'rejected', rejectionReason: String(reason).trim() },
       });
     }
 

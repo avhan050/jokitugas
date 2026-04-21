@@ -110,6 +110,11 @@ export default function TransactionsPage() {
                   <span className="badge badge-cancelled">Ditolak</span>
                 )}
               </div>
+              {tx.rejectionReason && (
+                <p className="text-xs mt-2" style={{ color: 'var(--danger)' }}>
+                  Alasan penolakan: {tx.rejectionReason}
+                </p>
+              )}
             </div>
             <div className="text-right flex-shrink-0">
               <p

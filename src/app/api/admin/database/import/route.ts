@@ -51,6 +51,7 @@ type BackupPayload = {
       status: string;
       proofUrl?: string | null;
       note?: string | null;
+      rejectionReason?: string | null;
       bankDetails?: string | null;
     }>;
     adminSettings: Array<{

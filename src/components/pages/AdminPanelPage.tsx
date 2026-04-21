@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAppStore } from '@/lib/store';
 import { formatRupiah, formatDate, statusLabel, statusBadgeClass } from '@/lib/helpers';
-import type { User } from '@/lib/types';
 import {
   CheckCircle,
   XCircle,
@@ -18,16 +17,13 @@ import {
   Database,
   Lock,
   Save,
-  UserPlus,
-  Pencil,
-  Trash2,
 } from 'lucide-react';
+import RejectTransactionModal from './RejectTransactionModal';
 
 export default function AdminPanelPage() {
-  const { transactions, users, tasks, adminSettings, approveTransaction, rejectTransaction, updateAdminSettings, addToast, openModal, closeModal, pageState, refreshData, changePassword, currentUser } = useAppStore();
+  const { transactions, users, tasks, adminSettings, approveTransaction, rejectTransaction, updateAdminSettings, addToast, openModal, closeModal, pageState, refreshData, changePassword } = useAppStore();
   const overviewRef = useRef<HTMLDivElement>(null);
   const pendingRef = useRef<HTMLDivElement>(null);
-  const usersRef = useRef<HTMLDivElement>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
 
   const pendingTx = transactions
@@ -50,16 +46,6 @@ export default function AdminPanelPage() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  const [userFormMode, setUserFormMode] = useState<'create' | 'edit'>('create');
-  const [editingUserId, setEditingUserId] = useState<string | null>(null);
-  const [userName, setUserName] = useState('');
-  const [userEmail, setUserEmail] = useState('');
-  const [userRole, setUserRole] = useState<'client' | 'worker' | 'admin'>('client');
-  const [userBalance, setUserBalance] = useState('0');
-  const [userPassword, setUserPassword] = useState('');
-  const [userFormError, setUserFormError] = useState('');
-  const [isSavingUser, setIsSavingUser] = useState(false);
-  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
 
   const handleSaveSettings = () => {
     updateAdminSettings({
@@ -103,110 +89,6 @@ export default function AdminPanelPage() {
   const getUserName = (userId: string) => {
     const u = users.find((u) => u.id === userId);
     return u?.name || 'Unknown';
-  };
-
-  const resetUserForm = () => {
-    setUserFormMode('create');
-    setEditingUserId(null);
-    setUserName('');
-    setUserEmail('');
-    setUserRole('client');
-    setUserBalance('0');
-    setUserPassword('');
-    setUserFormError('');
-  };
-
-  const startEditUser = (user: User) => {
-    setUserFormMode('edit');
-    setEditingUserId(user.id);
-    setUserName(user.name);
-    setUserEmail(user.email);
-    setUserRole(user.role);
-    setUserBalance(String(user.balance));
-    setUserPassword('');
-    setUserFormError('');
-    usersRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
-  const handleSaveUser = async () => {
-    setUserFormError('');
-
-    if (!userName.trim() || !userEmail.trim()) {
-      setUserFormError('Nama dan email pengguna wajib diisi.');
-      return;
-    }
-
-    if (userFormMode === 'create' && userPassword.trim().length < 6) {
-      setUserFormError('Password pengguna baru minimal 6 karakter.');
-      return;
-    }
-
-    if (userFormMode === 'edit' && userPassword.trim() && userPassword.trim().length < 6) {
-      setUserFormError('Password baru minimal 6 karakter.');
-      return;
-    }
-
-    try {
-      setIsSavingUser(true);
-      const payload = {
-        name: userName.trim(),
-        email: userEmail.trim(),
-        role: userRole,
-        balance: Number(userBalance) || 0,
-        ...(userPassword.trim() ? { password: userPassword.trim() } : {}),
-      };
-
-      const res = await fetch(
-        userFormMode === 'create' ? '/api/admin/users' : `/api/admin/users/${editingUserId}`,
-        {
-          method: userFormMode === 'create' ? 'POST' : 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        }
-      );
-
-      const data = await res.json();
-      if (!res.ok) {
-        setUserFormError(data.error || 'Gagal menyimpan pengguna.');
-        return;
-      }
-
-      await refreshData();
-      addToast(userFormMode === 'create' ? 'Pengguna baru berhasil dibuat.' : 'Data pengguna berhasil diperbarui.', 'success');
-      resetUserForm();
-    } catch (error) {
-      console.error('Save user error:', error);
-      setUserFormError('Gagal menyimpan pengguna.');
-    } finally {
-      setIsSavingUser(false);
-    }
-  };
-
-  const handleDeleteUser = async (user: User) => {
-    const confirmed = window.confirm(`Hapus pengguna ${user.name}?`);
-    if (!confirmed) return;
-
-    try {
-      setDeletingUserId(user.id);
-      const res = await fetch(`/api/admin/users/${user.id}`, { method: 'DELETE' });
-      const data = await res.json();
-
-      if (!res.ok) {
-        addToast(data.error || 'Gagal menghapus pengguna.', 'error');
-        return;
-      }
-
-      await refreshData();
-      addToast('Pengguna berhasil dihapus.', 'success');
-      if (editingUserId === user.id) {
-        resetUserForm();
-      }
-    } catch (error) {
-      console.error('Delete user error:', error);
-      addToast('Gagal menghapus pengguna.', 'error');
-    } finally {
-      setDeletingUserId(null);
-    }
   };
 
   const handleBackupDatabase = async () => {
@@ -291,11 +173,6 @@ export default function AdminPanelPage() {
 
     if (pageState.adminSection === 'overview') {
       overviewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      return;
-    }
-
-    if (pageState.adminSection === 'users') {
-      usersRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }, [pageState.adminSection]);
 
@@ -396,144 +273,6 @@ export default function AdminPanelPage() {
           </button>
         </div>
       )}
-
-      <div
-        ref={usersRef}
-        className="rounded-2xl p-6 space-y-5"
-        style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
-      >
-        <div className="flex items-center gap-3">
-          <div
-            className="w-11 h-11 rounded-xl flex items-center justify-center"
-            style={{ background: 'var(--gold-dim)' }}
-          >
-            <UserPlus size={22} style={{ color: 'var(--gold)' }} />
-          </div>
-          <div>
-            <h3 className="font-bold" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
-              Kelola Pengguna
-            </h3>
-            <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
-              Tambah, edit, dan hapus akun pengguna untuk memudahkan pengelolaan aplikasi.
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          <div>
-            <label className="block text-sm font-semibold mb-1">Nama</label>
-            <input type="text" value={userName} onChange={(e) => setUserName(e.target.value)} className="form-input" />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold mb-1">Email</label>
-            <input type="email" value={userEmail} onChange={(e) => setUserEmail(e.target.value)} className="form-input" />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold mb-1">Role</label>
-            <select value={userRole} onChange={(e) => setUserRole(e.target.value as 'client' | 'worker' | 'admin')} className="form-input">
-              <option value="client">Client</option>
-              <option value="worker">Joki / Pekerja</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-semibold mb-1">Saldo Awal</label>
-            <input type="number" value={userBalance} onChange={(e) => setUserBalance(e.target.value)} className="form-input" min="0" />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold mb-1">
-              {userFormMode === 'create' ? 'Password' : 'Password Baru'}
-            </label>
-            <input
-              type="password"
-              value={userPassword}
-              onChange={(e) => setUserPassword(e.target.value)}
-              placeholder={userFormMode === 'create' ? 'Minimal 6 karakter' : 'Kosongkan jika tidak diubah'}
-              className="form-input"
-            />
-          </div>
-        </div>
-
-        {userFormError && (
-          <p className="text-sm font-medium" style={{ color: 'var(--danger)' }}>
-            {userFormError}
-          </p>
-        )}
-
-        <div className="flex flex-col sm:flex-row gap-3">
-          <button
-            onClick={handleSaveUser}
-            disabled={isSavingUser}
-            className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-bold transition-all disabled:opacity-60"
-            style={{ background: 'var(--accent)', color: '#0B1120' }}
-          >
-            <Save size={16} />
-            {isSavingUser ? 'Menyimpan...' : userFormMode === 'create' ? 'Tambah Pengguna' : 'Simpan Perubahan'}
-          </button>
-          {userFormMode === 'edit' && (
-            <button
-              onClick={resetUserForm}
-              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-bold transition-all"
-              style={{ background: 'var(--bg)', color: 'var(--fg)', border: '1px solid var(--border)' }}
-            >
-              Batal Edit
-            </button>
-          )}
-        </div>
-
-        <div className="space-y-3">
-          {users.length === 0 && (
-            <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
-              Belum ada pengguna terdaftar.
-            </p>
-          )}
-          {users.map((user) => (
-            <div
-              key={user.id}
-              className="rounded-xl p-4 flex flex-col lg:flex-row lg:items-center gap-4"
-              style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}
-            >
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <p className="font-semibold">{user.name}</p>
-                  <span className={`badge ${user.role === 'admin' ? 'badge-review' : user.role === 'worker' ? 'badge-progress' : 'badge-open'}`}>
-                    {user.role === 'admin' ? 'Admin' : user.role === 'worker' ? 'Pekerja' : 'Client'}
-                  </span>
-                  {currentUser?.id === user.id && (
-                    <span className="badge badge-done">Akun Anda</span>
-                  )}
-                </div>
-                <p className="text-sm mt-1" style={{ color: 'var(--muted-foreground)' }}>
-                  {user.email}
-                </p>
-                <p className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>
-                  Saldo {formatRupiah(user.balance)} • Bergabung {formatDate(user.createdAt)}
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => startEditUser(user)}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold"
-                  style={{ background: 'var(--info-dim)', color: 'var(--info)' }}
-                >
-                  <Pencil size={14} />
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDeleteUser(user)}
-                  disabled={deletingUserId === user.id || currentUser?.id === user.id}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-50"
-                  style={{ background: 'var(--danger-dim)', color: 'var(--danger)' }}
-                >
-                  <Trash2 size={14} />
-                  {deletingUserId === user.id ? 'Menghapus...' : 'Hapus'}
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
 
       <div
         className="rounded-2xl p-6 space-y-4"
@@ -747,7 +486,7 @@ export default function AdminPanelPage() {
                       <CheckCircle size={18} />
                     </button>
                     <button
-                      onClick={() => rejectTransaction(tx.id)}
+                      onClick={() => openModal(<RejectTransactionModal transactionId={tx.id} transactionType={tx.type as 'topup' | 'withdraw'} />)}
                       className="p-2 rounded-lg transition-all"
                       style={{ background: 'var(--danger-dim)', color: 'var(--danger)' }}
                       title="Tolak"
@@ -784,6 +523,11 @@ export default function AdminPanelPage() {
                   <p className="text-xs mt-0.5" style={{ color: 'var(--muted-foreground)' }}>
                     {getUserName(tx.userId)} • {formatDate(tx.createdAt)}
                   </p>
+                  {tx.rejectionReason && (
+                    <p className="text-xs mt-1" style={{ color: 'var(--danger)' }}>
+                      Alasan penolakan: {tx.rejectionReason}
+                    </p>
+                  )}
                 </div>
                 <span
                   className="text-sm font-bold flex-shrink-0"

@@ -61,6 +61,7 @@ model Transaction {
   status      String   @default("pending") // pending, approved, rejected
   proofUrl    String?
   note        String?
+  rejectionReason String?
   bankDetails String?
 
   user User @relation(fields: [userId], references: [id])

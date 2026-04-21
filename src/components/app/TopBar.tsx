@@ -14,6 +14,7 @@ const pageTitles: Record<string, string> = {
   transactions: 'Riwayat Transaksi',
   profile: 'Profil Saya',
   admin: 'Admin Panel',
+  'admin-users': 'Kelola Pengguna',
 };
 
 export default function TopBar() {

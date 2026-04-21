@@ -121,7 +121,7 @@ export default function DashboardPage() {
             label="Total Pengguna"
             value={users.filter((u) => u.role !== 'admin').length.toString()}
             color="var(--info)"
-            onClick={() => setPage('admin', { adminSection: 'users' })}
+            onClick={() => setPage('admin-users')}
           />
           <StatCard
             icon={<ListChecks size={24} style={{ color: 'var(--gold)' }} />}

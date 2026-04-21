@@ -12,6 +12,7 @@ import {
   ArrowLeftRight,
   UserCircle,
   ShieldUser,
+  Users,
   LogOut,
 } from 'lucide-react';
 
@@ -32,6 +33,7 @@ const navItems: NavItem[] = [
   { page: 'transactions', label: 'Transaksi', icon: <ArrowLeftRight size={20} />, roles: ['client', 'worker'] },
   { page: 'profile', label: 'Profil', icon: <UserCircle size={20} />, roles: ['client', 'worker', 'admin'] },
   { page: 'admin', label: 'Admin Panel', icon: <ShieldUser size={20} />, roles: ['admin'] },
+  { page: 'admin-users', label: 'Kelola Pengguna', icon: <Users size={20} />, roles: ['admin'] },
 ];
 
 export default function Sidebar() {
