@@ -21,7 +21,11 @@ echo "Using DATABASE_URL=${DATABASE_URL}"
 echo "Syncing database..."
 npx prisma generate
 npx prisma db push
-node prisma/bootstrap-demo.mjs
+if [ "${ENABLE_DEMO_DATA:-false}" = "true" ]; then
+  node prisma/bootstrap-demo.mjs
+else
+  echo "Demo bootstrap dilewati. Set ENABLE_DEMO_DATA=true jika ingin membuat akun demo."
+fi
 
 # 2. Jalankan Socket Server di background (Port 3003)
 echo "Starting Socket Server..."

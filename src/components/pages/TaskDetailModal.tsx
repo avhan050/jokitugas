@@ -8,6 +8,49 @@ import SubmitWorkModal from './SubmitWorkModal';
 import RatingModal from './RatingModal';
 import TakeTaskModal from './TakeTaskModal';
 
+const MIME_EXTENSION_MAP: Record<string, string> = {
+  'application/msword': 'doc',
+  'application/pdf': 'pdf',
+  'application/vnd.ms-excel': 'xls',
+  'application/vnd.ms-powerpoint': 'ppt',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'pptx',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+  'application/zip': 'zip',
+  'image/gif': 'gif',
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'text/csv': 'csv',
+  'text/plain': 'txt',
+};
+
+function sanitizeFileName(name: string) {
+  return name.replace(/[<>:"/\\|?*\x00-\x1F]/g, '-').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+}
+
+function getFileExtension(submissionUrl: string) {
+  if (submissionUrl.startsWith('data:')) {
+    const mime = submissionUrl.slice(5, submissionUrl.indexOf(';'));
+    return MIME_EXTENSION_MAP[mime] || 'bin';
+  }
+
+  try {
+    const pathname = new URL(submissionUrl, window.location.origin).pathname;
+    const lastSegment = pathname.split('/').pop() || '';
+    const extension = lastSegment.split('.').pop();
+    return extension && extension !== lastSegment ? extension : 'bin';
+  } catch {
+    return 'bin';
+  }
+}
+
+function buildDownloadName(taskTitle: string, submissionUrl: string) {
+  const baseName = sanitizeFileName(taskTitle) || 'hasil-joki';
+  const extension = getFileExtension(submissionUrl);
+  return `${baseName}.${extension}`;
+}
+
 export default function TaskDetailModal({ taskId }: { taskId: string }) {
   const { tasks, users, currentUser, closeModal, openModal, cancelTask } = useAppStore();
 
@@ -25,6 +68,40 @@ export default function TaskDetailModal({ taskId }: { taskId: string }) {
   const statusSteps = ['open', 'in_progress', 'under_review', 'completed'] as const;
   const statusOrder = ['open', 'in_progress', 'under_review', 'completed'];
   const currentIdx = statusOrder.indexOf(task.status);
+
+  const handleDownloadSubmission = async () => {
+    if (!task.submissionUrl) return;
+
+    const fileName = buildDownloadName(task.title, task.submissionUrl);
+
+    try {
+      const link = document.createElement('a');
+
+      if (task.submissionUrl.startsWith('data:')) {
+        const response = await fetch(task.submissionUrl);
+        const blob = await response.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        link.href = objectUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(objectUrl);
+        return;
+      }
+
+      link.href = task.submissionUrl;
+      link.download = fileName;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error('Download submission error:', error);
+      useAppStore.getState().addToast('Gagal mengunduh file hasil joki.', 'error');
+    }
+  };
 
   return (
     <div className="space-y-5">
@@ -170,15 +247,14 @@ export default function TaskDetailModal({ taskId }: { taskId: string }) {
                 <MessageSquare size={16} style={{ color: 'var(--accent)' }} />
                 <span className="text-sm font-semibold">File Hasil Joki</span>
               </div>
-              <a 
-                href={task.submissionUrl} 
-                target="_blank" 
-                rel="noopener noreferrer"
+              <button
+                type="button"
+                onClick={handleDownloadSubmission}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all"
                 style={{ background: 'var(--accent)', color: '#0B1120' }}
               >
                 Download Hasil
-              </a>
+              </button>
             </div>
           )}
         </div>
