@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAppStore } from '@/lib/store';
 import { formatRupiah, formatDate, statusLabel, statusBadgeClass } from '@/lib/helpers';
 import {
@@ -15,7 +15,9 @@ import {
 } from 'lucide-react';
 
 export default function AdminPanelPage() {
-  const { transactions, users, tasks, adminSettings, approveTransaction, rejectTransaction, updateAdminSettings, addToast, openModal, closeModal } = useAppStore();
+  const { transactions, users, tasks, adminSettings, approveTransaction, rejectTransaction, updateAdminSettings, addToast, openModal, closeModal, pageState } = useAppStore();
+  const overviewRef = useRef<HTMLDivElement>(null);
+  const pendingRef = useRef<HTMLDivElement>(null);
 
   const pendingTx = transactions
     .filter((t) => t.status === 'pending' && (t.type === 'topup' || t.type === 'withdraw'))
@@ -47,6 +49,17 @@ export default function AdminPanelPage() {
     return u?.name || 'Unknown';
   };
 
+  useEffect(() => {
+    if (pageState.adminSection === 'pending') {
+      pendingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+
+    if (pageState.adminSection === 'overview') {
+      overviewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [pageState.adminSection]);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -71,7 +84,7 @@ export default function AdminPanelPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div ref={overviewRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="stat-card">
           <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-3" style={{ background: 'var(--info-dim)' }}>
             <Users size={24} style={{ color: 'var(--info)' }} />
@@ -146,7 +159,7 @@ export default function AdminPanelPage() {
       )}
 
       {/* Pending transactions */}
-      <div>
+      <div ref={pendingRef}>
         <h3 className="text-lg font-bold mb-4" style={{ fontFamily: 'var(--font-space-grotesk)' }}>
           Menunggu Verifikasi
         </h3>

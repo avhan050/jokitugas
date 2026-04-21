@@ -1,6 +1,6 @@
 import React from 'react';
 import { create } from 'zustand';
-import type { User, Task, Transaction, ToastItem, AdminSettings, PageName, PublicStats } from './types';
+import type { User, Task, Transaction, ToastItem, AdminSettings, PageName, PublicStats, PageState } from './types';
 import { genId } from './helpers';
 import { io, Socket } from 'socket.io-client';
 
@@ -8,6 +8,7 @@ interface AppState {
   // Session
   currentUser: User | null;
   currentPage: PageName;
+  pageState: PageState;
   showAuth: boolean;
 
   // Data
@@ -30,7 +31,7 @@ interface AppState {
   login: (email: string, password: string) => Promise<boolean>;
   register: (name: string, email: string, password: string, role: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
-  setPage: (page: PageName) => void;
+  setPage: (page: PageName, pageState?: PageState) => void;
   setShowAuth: (show: boolean) => void;
   
   // Actions - Data Fetching
@@ -69,6 +70,7 @@ interface AppState {
 export const useAppStore = create<AppState>((set, get) => ({
   currentUser: null,
   currentPage: 'dashboard',
+  pageState: {},
   showAuth: false,
   users: [],
   tasks: [],
@@ -201,10 +203,10 @@ export const useAppStore = create<AppState>((set, get) => ({
       set({ channel: null });
     }
     await fetch('/api/auth/logout', { method: 'POST' });
-    set({ currentUser: null, currentPage: 'dashboard', mobileSidebarOpen: false, showAuth: false });
+    set({ currentUser: null, currentPage: 'dashboard', pageState: {}, mobileSidebarOpen: false, showAuth: false });
   },
 
-  setPage: (page) => set({ currentPage: page, mobileSidebarOpen: false }),
+  setPage: (page, pageState = {}) => set({ currentPage: page, pageState, mobileSidebarOpen: false }),
 
   setShowAuth: (show) => set({ showAuth: show }),
 

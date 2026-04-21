@@ -24,13 +24,25 @@ const txIcons: Record<string, React.ReactNode> = {
   fee: <Receipt size={18} style={{ color: 'var(--muted-foreground)' }} />,
 };
 
+const filters = [
+  { key: 'all', label: 'Semua' },
+  { key: 'income', label: 'Pemasukan' },
+  { key: 'expense', label: 'Pengeluaran' },
+] as const;
+
 export default function TransactionsPage() {
-  const { currentUser, transactions } = useAppStore();
+  const { currentUser, transactions, pageState, setPage } = useAppStore();
+  const filter = pageState.transactionsFilter ?? 'all';
 
   if (!currentUser) return null;
 
   const myTx = transactions
     .filter((t) => t.userId === currentUser.id)
+    .filter((t) => {
+      if (filter === 'income') return t.amount > 0;
+      if (filter === 'expense') return t.amount < 0;
+      return true;
+    })
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   return (
@@ -44,12 +56,29 @@ export default function TransactionsPage() {
         </p>
       </div>
 
+      <div className="flex gap-2 flex-wrap">
+        {filters.map((item) => (
+          <button
+            key={item.key}
+            onClick={() => setPage('transactions', { ...pageState, transactionsFilter: item.key })}
+            className="px-4 py-2 rounded-lg text-sm font-semibold transition-all"
+            style={{
+              background: filter === item.key ? 'var(--accent-dim)' : 'var(--card)',
+              color: filter === item.key ? 'var(--accent)' : 'var(--muted-foreground)',
+              border: filter === item.key ? '1px solid var(--accent)' : '1px solid var(--border)',
+            }}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+
       <div className="space-y-3">
         {myTx.length === 0 && (
           <div className="stat-card text-center py-12">
             <Inbox size={48} className="mx-auto mb-3" style={{ color: 'var(--muted-foreground)' }} />
             <p className="font-semibold text-lg" style={{ color: 'var(--muted-foreground)' }}>
-              Belum ada transaksi
+              {filter === 'all' ? 'Belum ada transaksi' : `Belum ada transaksi ${filter === 'income' ? 'pemasukan' : 'pengeluaran'}`}
             </p>
           </div>
         )}

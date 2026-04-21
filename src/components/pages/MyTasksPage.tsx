@@ -1,6 +1,6 @@
 'use client';
 
-import { createElement, useState } from 'react';
+import { createElement } from 'react';
 import { useAppStore } from '@/lib/store';
 import { formatRupiah, formatDateShort, statusLabel, statusBadgeClass, categoryIcon } from '@/lib/helpers';
 import { PlusCircle, Inbox } from 'lucide-react';
@@ -10,19 +10,23 @@ import TaskDetailModal from './TaskDetailModal';
 const filters = [
   { key: 'all', label: 'Semua' },
   { key: 'open', label: 'Terbuka' },
-  { key: 'in_progress', label: 'Dikerjakan' },
+  { key: 'active', label: 'Aktif' },
   { key: 'under_review', label: 'Ditinjau' },
   { key: 'completed', label: 'Selesai' },
 ];
 
 export default function MyTasksPage() {
-  const { currentUser, tasks, setPage, openModal } = useAppStore();
-  const [filter, setFilter] = useState('all');
+  const { currentUser, tasks, setPage, openModal, pageState } = useAppStore();
+  const filter = pageState.myTasksFilter ?? 'all';
 
   if (!currentUser) return null;
 
   const myTasks = tasks.filter((t) => t.clientId === currentUser.id);
-  const filteredTasks = filter === 'all' ? myTasks : myTasks.filter((t) => t.status === filter);
+  const filteredTasks = filter === 'all'
+    ? myTasks
+    : filter === 'active'
+      ? myTasks.filter((t) => t.status === 'in_progress' || t.status === 'under_review')
+      : myTasks.filter((t) => t.status === filter);
   const sortedTasks = [...filteredTasks].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   return (
@@ -54,7 +58,7 @@ export default function MyTasksPage() {
         {filters.map((f) => (
           <button
             key={f.key}
-            onClick={() => setFilter(f.key)}
+            onClick={() => setPage('mytasks', { ...pageState, myTasksFilter: f.key as typeof filter })}
             className="px-4 py-2 rounded-lg text-sm font-semibold transition-all"
             style={{
               background: filter === f.key ? 'var(--accent-dim)' : 'var(--card)',
@@ -71,10 +75,10 @@ export default function MyTasksPage() {
       <div className="space-y-3">
         {sortedTasks.length === 0 && (
           <div className="stat-card text-center py-12">
-            <Inbox size={48} className="mx-auto mb-3" style={{ color: 'var(--muted-foreground)' }} />
-            <p className="font-semibold text-lg" style={{ color: 'var(--muted-foreground)' }}>
-              {filter === 'all' ? 'Belum ada tugas' : `Tidak ada tugas ${statusLabel(filter).toLowerCase()}`}
-            </p>
+              <Inbox size={48} className="mx-auto mb-3" style={{ color: 'var(--muted-foreground)' }} />
+              <p className="font-semibold text-lg" style={{ color: 'var(--muted-foreground)' }}>
+              {filter === 'all' ? 'Belum ada tugas' : filter === 'active' ? 'Tidak ada tugas aktif' : `Tidak ada tugas ${statusLabel(filter).toLowerCase()}`}
+              </p>
             {filter === 'all' && (
               <button
                 onClick={() => setPage('posttask')}

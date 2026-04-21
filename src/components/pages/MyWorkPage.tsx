@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { useAppStore } from '@/lib/store';
 import { formatRupiah, formatDateShort, statusLabel, statusBadgeClass, categoryIcon } from '@/lib/helpers';
 import { Inbox, Send } from 'lucide-react';
@@ -10,19 +9,23 @@ import SubmitWorkModal from './SubmitWorkModal';
 
 const filters = [
   { key: 'all', label: 'Semua' },
-  { key: 'in_progress', label: 'Berjalan' },
+  { key: 'active', label: 'Berjalan' },
   { key: 'under_review', label: 'Ditinjau' },
   { key: 'completed', label: 'Selesai' },
 ];
 
 export default function MyWorkPage() {
-  const { currentUser, tasks, openModal } = useAppStore();
-  const [filter, setFilter] = useState('all');
+  const { currentUser, tasks, openModal, pageState, setPage } = useAppStore();
+  const filter = pageState.myWorkFilter ?? 'all';
 
   if (!currentUser) return null;
 
   const myWork = tasks.filter((t) => t.workerId === currentUser.id);
-  const filtered = filter === 'all' ? myWork : myWork.filter((t) => t.status === filter);
+  const filtered = filter === 'all'
+    ? myWork
+    : filter === 'active'
+      ? myWork.filter((t) => t.status === 'in_progress' || t.status === 'under_review')
+      : myWork.filter((t) => t.status === filter);
   const sorted = [...filtered].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   return (
@@ -41,7 +44,7 @@ export default function MyWorkPage() {
         {filters.map((f) => (
           <button
             key={f.key}
-            onClick={() => setFilter(f.key)}
+            onClick={() => setPage('mywork', { ...pageState, myWorkFilter: f.key as typeof filter })}
             className="px-4 py-2 rounded-lg text-sm font-semibold transition-all"
             style={{
               background: filter === f.key ? 'var(--accent-dim)' : 'var(--card)',
@@ -58,9 +61,9 @@ export default function MyWorkPage() {
       <div className="space-y-3">
         {sorted.length === 0 && (
           <div className="stat-card text-center py-12">
-            <Inbox size={48} className="mx-auto mb-3" style={{ color: 'var(--muted-foreground)' }} />
-            <p className="font-semibold text-lg" style={{ color: 'var(--muted-foreground)' }}>
-              {filter === 'all' ? 'Belum ada pekerjaan' : `Tidak ada pekerjaan ${statusLabel(filter).toLowerCase()}`}
+              <Inbox size={48} className="mx-auto mb-3" style={{ color: 'var(--muted-foreground)' }} />
+              <p className="font-semibold text-lg" style={{ color: 'var(--muted-foreground)' }}>
+              {filter === 'all' ? 'Belum ada pekerjaan' : filter === 'active' ? 'Tidak ada pekerjaan berjalan' : `Tidak ada pekerjaan ${statusLabel(filter).toLowerCase()}`}
             </p>
           </div>
         )}

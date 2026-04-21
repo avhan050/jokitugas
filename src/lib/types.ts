@@ -66,6 +66,13 @@ export interface ToastItem {
   exiting?: boolean;
 }
 
+export interface PageState {
+  myTasksFilter?: 'all' | 'active' | Task['status'];
+  myWorkFilter?: 'all' | 'active' | Extract<Task['status'], 'in_progress' | 'under_review' | 'completed'>;
+  transactionsFilter?: 'all' | 'income' | 'expense';
+  adminSection?: 'overview' | 'pending';
+}
+
 export type PageName =
   | 'dashboard'
   | 'mytasks'

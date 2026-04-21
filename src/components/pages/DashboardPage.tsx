@@ -12,13 +12,35 @@ import {
   Wallet,
   Coins,
   ClipboardList,
+  ChevronRight,
 } from 'lucide-react';
 import type { Task } from '@/lib/types';
 import TaskDetailModal from './TaskDetailModal';
 
-function StatCard({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: string; color: string }) {
+function StatCard({
+  icon,
+  label,
+  value,
+  color,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  color: string;
+  onClick?: () => void;
+}) {
+  const isClickable = Boolean(onClick);
+
   return (
-    <div className="stat-card">
+    <button
+      type="button"
+      className="stat-card w-full text-left transition-all"
+      style={{ cursor: isClickable ? 'pointer' : 'default' }}
+      onClick={onClick}
+      disabled={!isClickable}
+      aria-label={isClickable ? `${label}: ${value}` : undefined}
+    >
       <div
         className="w-12 h-12 rounded-xl flex items-center justify-center mb-3"
         style={{ background: color + '18' }}
@@ -31,7 +53,13 @@ function StatCard({ icon, label, value, color }: { icon: React.ReactNode; label:
       <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
         {label}
       </p>
-    </div>
+      {isClickable && (
+        <div className="mt-3 flex items-center gap-1 text-xs font-semibold" style={{ color }}>
+          Lihat detail
+          <ChevronRight size={14} />
+        </div>
+      )}
+    </button>
   );
 }
 
@@ -65,7 +93,7 @@ function TaskRow({ task, onClick }: { task: Task; onClick: () => void }) {
 }
 
 export default function DashboardPage() {
-  const { currentUser, tasks, transactions, users, openModal } = useAppStore();
+  const { currentUser, tasks, transactions, users, openModal, setPage } = useAppStore();
 
   if (!currentUser) return null;
 
@@ -83,27 +111,31 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
             icon={<Coins size={24} style={{ color: 'var(--accent)' }} />}
-            label="Total Pendapatan Platform"
+            label="Pendapatan Aplikasi"
             value={formatRupiah(totalRevenue)}
             color="var(--accent)"
+            onClick={() => setPage('admin', { adminSection: 'overview' })}
           />
           <StatCard
             icon={<Users size={24} style={{ color: 'var(--info)' }} />}
             label="Total Pengguna"
             value={users.filter((u) => u.role !== 'admin').length.toString()}
             color="var(--info)"
+            onClick={() => setPage('admin', { adminSection: 'overview' })}
           />
           <StatCard
             icon={<ListChecks size={24} style={{ color: 'var(--gold)' }} />}
             label="Total Tugas"
             value={tasks.length.toString()}
             color="var(--gold)"
+            onClick={() => setPage('admin', { adminSection: 'overview' })}
           />
           <StatCard
             icon={<Hourglass size={24} style={{ color: 'var(--danger)' }} />}
             label="Menunggu Verifikasi"
             value={pendingTx.length.toString()}
             color="var(--danger)"
+            onClick={() => setPage('admin', { adminSection: 'pending' })}
           />
         </div>
 
@@ -147,24 +179,28 @@ export default function DashboardPage() {
             label="Total Pengeluaran"
             value={formatRupiah(totalSpent)}
             color="var(--accent)"
+            onClick={() => setPage('transactions', { transactionsFilter: 'expense' })}
           />
           <StatCard
             icon={<ClipboardList size={24} style={{ color: 'var(--info)' }} />}
             label="Tugas Terbuka"
             value={openCount.toString()}
             color="var(--info)"
+            onClick={() => setPage('mytasks', { myTasksFilter: 'open' })}
           />
           <StatCard
             icon={<TrendingUp size={24} style={{ color: 'var(--gold)' }} />}
             label="Sedang Aktif"
             value={activeCount.toString()}
             color="var(--gold)"
+            onClick={() => setPage('mytasks', { myTasksFilter: 'active' })}
           />
           <StatCard
             icon={<CheckCircle size={24} style={{ color: '#00D68F' }} />}
             label="Selesai"
             value={completedCount.toString()}
             color="#00D68F"
+            onClick={() => setPage('mytasks', { myTasksFilter: 'completed' })}
           />
         </div>
 
@@ -208,27 +244,31 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           icon={<Coins size={24} style={{ color: 'var(--accent)' }} />}
-          label="Total Pendapatan"
+          label="Total Pendapatan Anda"
           value={formatRupiah(totalEarned)}
           color="var(--accent)"
+          onClick={() => setPage('transactions', { transactionsFilter: 'income' })}
         />
         <StatCard
           icon={<ListChecks size={24} style={{ color: 'var(--info)' }} />}
           label="Tugas Tersedia"
           value={openTasks.length.toString()}
           color="var(--info)"
+          onClick={() => setPage('marketplace')}
         />
         <StatCard
           icon={<TrendingUp size={24} style={{ color: 'var(--gold)' }} />}
           label="Sedang Dikerjakan"
           value={activeCount.toString()}
           color="var(--gold)"
+          onClick={() => setPage('mywork', { myWorkFilter: 'active' })}
         />
         <StatCard
           icon={<CheckCircle size={24} style={{ color: '#00D68F' }} />}
           label="Selesai"
           value={completedCount.toString()}
           color="#00D68F"
+          onClick={() => setPage('mywork', { myWorkFilter: 'completed' })}
         />
       </div>
 
