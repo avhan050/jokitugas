@@ -251,6 +251,11 @@ export const useAppStore = create<AppState>((set, get) => ({
         get().addToast('Tugas berhasil diposting!', 'success');
         return true;
       }
+      if (typeof data.error === 'string' && data.error.toLowerCase().includes('saldo anda belum cukup')) {
+        get().addToast(data.error, 'warning');
+        get().setPage('wallet', { walletTab: 'topup' });
+        return false;
+      }
       get().addToast(data.error || 'Gagal posting tugas', 'error');
       return false;
     } catch (error) {

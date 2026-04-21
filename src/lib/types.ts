@@ -69,8 +69,9 @@ export interface ToastItem {
 export interface PageState {
   myTasksFilter?: 'all' | 'active' | Task['status'];
   myWorkFilter?: 'all' | 'active' | Extract<Task['status'], 'in_progress' | 'under_review' | 'completed'>;
+  walletTab?: 'topup' | 'withdraw';
   transactionsFilter?: 'all' | 'income' | 'expense';
-  adminSection?: 'overview' | 'pending';
+  adminSection?: 'overview' | 'pending' | 'users';
 }
 
 export type PageName =

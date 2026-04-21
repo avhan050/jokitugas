@@ -2,6 +2,7 @@
 
 import { ClipboardList, UserCheck, CheckCircle2, ArrowRight, User, Laptop } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAppStore } from '@/lib/store';
 
 const steps = [
   {
@@ -25,6 +26,8 @@ const steps = [
 ];
 
 export default function HowItWorksSection() {
+  const { setShowAuth } = useAppStore();
+
   return (
     <section id="cara-kerja" className="py-20" style={{ background: 'var(--bg2)' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -140,6 +143,7 @@ export default function HowItWorksSection() {
               </div>
 
               <Button
+                onClick={() => setShowAuth(true)}
                 className="w-full font-semibold py-3 rounded-xl transition-all hover:opacity-90 text-base"
                 style={{ background: 'var(--accent)', color: '#0B1120' }}
               >
@@ -148,9 +152,9 @@ export default function HowItWorksSection() {
 
               <p className="text-xs text-center mt-4" style={{ color: 'var(--muted-foreground)' }}>
                 Sudah punya akun?{' '}
-                <a href="#" className="font-medium" style={{ color: 'var(--accent)' }}>
+                <button onClick={() => setShowAuth(true)} className="font-medium" style={{ color: 'var(--accent)' }}>
                   Masuk di sini
-                </a>
+                </button>
               </p>
             </div>
           </div>

@@ -40,7 +40,7 @@ export default function CTASection() {
                 className="font-semibold px-6 py-3 rounded-xl transition-all hover:opacity-90 text-base"
                 style={{ background: '#0B1120', color: '#FFFFFF' }}
               >
-                Coba Demo Sekarang
+                Daftar Akun Gratis
                 <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
               <Button

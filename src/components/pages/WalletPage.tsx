@@ -15,8 +15,8 @@ import {
 import TopupConfirmModal from './TopupConfirmModal';
 
 export default function WalletPage() {
-  const { currentUser, transactions, tasks, adminSettings, openModal } = useAppStore();
-  const [tab, setTab] = useState<'topup' | 'withdraw'>('topup');
+  const { currentUser, transactions, tasks, adminSettings, openModal, pageState, setPage } = useAppStore();
+  const tab = pageState.walletTab ?? 'topup';
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
   const [bankDetails, setBankDetails] = useState('');
@@ -121,7 +121,7 @@ export default function WalletPage() {
       >
         <div className="flex rounded-xl p-1 mb-5" style={{ background: 'var(--bg)' }}>
           <button
-            onClick={() => { setTab('topup'); setError(''); }}
+            onClick={() => { setPage('wallet', { ...pageState, walletTab: 'topup' }); setError(''); }}
             className="flex-1 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all"
             style={{
               background: tab === 'topup' ? 'var(--accent)' : 'transparent',
@@ -132,7 +132,7 @@ export default function WalletPage() {
             Top Up
           </button>
           <button
-            onClick={() => { setTab('withdraw'); setError(''); }}
+            onClick={() => { setPage('wallet', { ...pageState, walletTab: 'withdraw' }); setError(''); }}
             className="flex-1 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all"
             style={{
               background: tab === 'withdraw' ? 'var(--danger)' : 'transparent',
