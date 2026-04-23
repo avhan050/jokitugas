@@ -4,16 +4,17 @@ import { useState } from 'react';
 import { useAppStore } from '@/lib/store';
 import { formatRupiah, formatDate } from '@/lib/helpers';
 import type { User } from '@/lib/types';
-import { UserPlus, Save, Pencil, Trash2, ShieldUser, Users, Search } from 'lucide-react';
+import { UserPlus, Save, Pencil, Trash2, ShieldUser, Users, Search, WalletCards } from 'lucide-react';
 
 export default function AdminUsersPage() {
-  const { users, addToast, refreshData, currentUser } = useAppStore();
+  const { users, addToast, refreshData, currentUser, emitDataUpdate } = useAppStore();
   const [userFormMode, setUserFormMode] = useState<'create' | 'edit'>('create');
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [userName, setUserName] = useState('');
   const [userEmail, setUserEmail] = useState('');
   const [userRole, setUserRole] = useState<'client' | 'worker' | 'admin'>('client');
   const [userBalance, setUserBalance] = useState('0');
+  const [balanceNote, setBalanceNote] = useState('');
   const [userPassword, setUserPassword] = useState('');
   const [userFormError, setUserFormError] = useState('');
   const [isSavingUser, setIsSavingUser] = useState(false);
@@ -37,6 +38,7 @@ export default function AdminUsersPage() {
     setUserEmail('');
     setUserRole('client');
     setUserBalance('0');
+    setBalanceNote('');
     setUserPassword('');
     setUserFormError('');
   };
@@ -48,6 +50,7 @@ export default function AdminUsersPage() {
     setUserEmail(user.email);
     setUserRole(user.role);
     setUserBalance(String(user.balance));
+    setBalanceNote('');
     setUserPassword('');
     setUserFormError('');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -71,13 +74,20 @@ export default function AdminUsersPage() {
       return;
     }
 
+    const parsedBalance = Number(userBalance);
+    if (!Number.isFinite(parsedBalance) || parsedBalance < 0) {
+      setUserFormError('Saldo harus berupa angka valid minimal 0.');
+      return;
+    }
+
     try {
       setIsSavingUser(true);
       const payload = {
         name: userName.trim(),
         email: userEmail.trim(),
         role: userRole,
-        balance: Number(userBalance) || 0,
+        balance: parsedBalance,
+        ...(userFormMode === 'edit' && balanceNote.trim() ? { balanceNote: balanceNote.trim() } : {}),
         ...(userPassword.trim() ? { password: userPassword.trim() } : {}),
       };
 
@@ -97,6 +107,7 @@ export default function AdminUsersPage() {
       }
 
       await refreshData();
+      emitDataUpdate('users', userFormMode === 'create' ? 'Admin menambahkan pengguna baru.' : 'Admin memperbarui data pengguna.');
       addToast(userFormMode === 'create' ? 'Pengguna baru berhasil dibuat.' : 'Data pengguna berhasil diperbarui.', 'success');
       resetUserForm();
     } catch (error) {
@@ -106,6 +117,12 @@ export default function AdminUsersPage() {
       setIsSavingUser(false);
     }
   };
+
+  const selectedUser = editingUserId ? users.find((user) => user.id === editingUserId) : null;
+  const parsedBalance = Number(userBalance);
+  const balanceDelta = selectedUser && Number.isFinite(parsedBalance)
+    ? parsedBalance - selectedUser.balance
+    : 0;
 
   const handleDeleteUser = async (user: User) => {
     const confirmed = window.confirm(`Hapus pengguna ${user.name}?`);
@@ -276,9 +293,55 @@ export default function AdminUsersPage() {
               </div>
               <div>
                 <label className="block text-sm font-semibold mb-1">Saldo</label>
-                <input type="number" value={userBalance} onChange={(e) => setUserBalance(e.target.value)} className="form-input" min="0" />
+                <input
+                  type="number"
+                  value={userBalance}
+                  onChange={(e) => setUserBalance(e.target.value)}
+                  className="form-input"
+                  min="0"
+                  step="1000"
+                />
               </div>
             </div>
+            {userFormMode === 'edit' && selectedUser && (
+              <div
+                className="rounded-xl p-4 space-y-3"
+                style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}
+              >
+                <div className="flex items-start gap-3">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: 'var(--info-dim)' }}
+                  >
+                    <WalletCards size={18} style={{ color: 'var(--info)' }} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold">Update saldo pengguna</p>
+                    <p className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>
+                      Saldo saat ini {formatRupiah(selectedUser.balance)}. Perubahan akan dicatat di riwayat transaksi pengguna.
+                    </p>
+                    {Number.isFinite(parsedBalance) && balanceDelta !== 0 && (
+                      <p
+                        className="text-xs font-semibold mt-2"
+                        style={{ color: balanceDelta > 0 ? 'var(--accent)' : 'var(--danger)' }}
+                      >
+                        Selisih {balanceDelta > 0 ? '+' : '-'}{formatRupiah(Math.abs(balanceDelta))}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-1">Catatan perubahan saldo</label>
+                  <textarea
+                    value={balanceNote}
+                    onChange={(e) => setBalanceNote(e.target.value)}
+                    className="form-input"
+                    rows={3}
+                    placeholder="Contoh: Koreksi top up manual, bonus, atau penyesuaian saldo."
+                  />
+                </div>
+              </div>
+            )}
             <div>
               <label className="block text-sm font-semibold mb-1">
                 {userFormMode === 'create' ? 'Password' : 'Password Baru'}

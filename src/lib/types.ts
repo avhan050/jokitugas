@@ -34,7 +34,7 @@ export interface Task {
 export interface Transaction {
   id: string;
   userId: string;
-  type: 'topup' | 'withdraw' | 'escrow' | 'earning' | 'refund' | 'fee';
+  type: 'topup' | 'withdraw' | 'escrow' | 'earning' | 'refund' | 'fee' | 'admin_adjustment';
   amount: number;
   taskId: string | null;
   createdAt: string;

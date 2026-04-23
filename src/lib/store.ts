@@ -64,7 +64,7 @@ interface AppState {
   
   // Real-time
   initRealtime: (userId: string) => void;
-  emitDataUpdate: (type: string) => void;
+  emitDataUpdate: (type: string, message?: string) => void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({

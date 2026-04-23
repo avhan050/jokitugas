@@ -35,6 +35,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Role pengguna tidak valid' }, { status: 400 });
     }
 
+    const initialBalance =
+      balance === undefined || balance === null || balance === ''
+        ? 0
+        : Number(balance);
+    if (!Number.isFinite(initialBalance) || initialBalance < 0) {
+      return NextResponse.json({ error: 'Saldo awal harus berupa angka valid minimal 0' }, { status: 400 });
+    }
+
     const existingUser = await db.user.findUnique({
       where: { email: email.toLowerCase() },
       select: { id: true },
@@ -51,7 +59,7 @@ export async function POST(request: Request) {
         email: email.toLowerCase().trim(),
         password: hashedPassword,
         role,
-        balance: Number(balance) || 0,
+        balance: initialBalance,
         rating: 0,
         completedJobs: 0,
         isAdmin: role === 'admin',

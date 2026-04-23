@@ -13,6 +13,7 @@ import {
   Handshake,
   Receipt,
   Inbox,
+  SlidersHorizontal,
 } from 'lucide-react';
 
 const txIcons: Record<string, React.ReactNode> = {
@@ -22,6 +23,7 @@ const txIcons: Record<string, React.ReactNode> = {
   earning: <Coins size={18} style={{ color: 'var(--accent)' }} />,
   refund: <Handshake size={18} style={{ color: 'var(--gold)' }} />,
   fee: <Receipt size={18} style={{ color: 'var(--muted-foreground)' }} />,
+  admin_adjustment: <SlidersHorizontal size={18} style={{ color: 'var(--info)' }} />,
 };
 
 const filters = [
@@ -113,6 +115,11 @@ export default function TransactionsPage() {
               {tx.rejectionReason && (
                 <p className="text-xs mt-2" style={{ color: 'var(--danger)' }}>
                   Alasan penolakan: {tx.rejectionReason}
+                </p>
+              )}
+              {tx.note && (
+                <p className="text-xs mt-2" style={{ color: 'var(--muted-foreground)' }}>
+                  Catatan: {tx.note}
                 </p>
               )}
             </div>

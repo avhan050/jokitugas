@@ -29,20 +29,41 @@ export async function PATCH(
     if (auth.error) return auth.error;
 
     const { id } = await params;
-    const { name, email, role, balance, password } = await request.json();
+    const { name, email, role, balance, password, balanceNote } = await request.json();
 
     const existingUser = await db.user.findUnique({
       where: { id },
-      select: { id: true },
+      select: { id: true, balance: true },
     });
 
     if (!existingUser) {
       return NextResponse.json({ error: 'Pengguna tidak ditemukan' }, { status: 404 });
     }
 
-    if (email) {
+    const nextName = typeof name === 'string' ? name.trim() : undefined;
+    const nextEmail = typeof email === 'string' ? email.toLowerCase().trim() : undefined;
+    const nextRole = typeof role === 'string' ? role : undefined;
+    const nextBalance = balance === undefined ? undefined : Number(balance);
+
+    if (nextName !== undefined && !nextName) {
+      return NextResponse.json({ error: 'Nama pengguna wajib diisi' }, { status: 400 });
+    }
+
+    if (nextEmail !== undefined && !nextEmail) {
+      return NextResponse.json({ error: 'Email pengguna wajib diisi' }, { status: 400 });
+    }
+
+    if (nextRole !== undefined && !['client', 'worker', 'admin'].includes(nextRole)) {
+      return NextResponse.json({ error: 'Role pengguna tidak valid' }, { status: 400 });
+    }
+
+    if (nextBalance !== undefined && (!Number.isFinite(nextBalance) || nextBalance < 0)) {
+      return NextResponse.json({ error: 'Saldo harus berupa angka valid minimal 0' }, { status: 400 });
+    }
+
+    if (nextEmail) {
       const emailOwner = await db.user.findUnique({
-        where: { email: email.toLowerCase() },
+        where: { email: nextEmail },
         select: { id: true },
       });
 
@@ -52,11 +73,11 @@ export async function PATCH(
     }
 
     const data: Record<string, unknown> = {
-      name: typeof name === 'string' ? name.trim() : undefined,
-      email: typeof email === 'string' ? email.toLowerCase().trim() : undefined,
-      role: typeof role === 'string' ? role : undefined,
-      balance: typeof balance === 'number' ? balance : undefined,
-      isAdmin: role === 'admin',
+      name: nextName,
+      email: nextEmail,
+      role: nextRole,
+      balance: nextBalance,
+      isAdmin: nextRole === undefined ? undefined : nextRole === 'admin',
     };
 
     if (typeof password === 'string' && password.trim()) {
@@ -67,9 +88,34 @@ export async function PATCH(
       Object.entries(data).filter(([, value]) => value !== undefined)
     );
 
-    const user = await db.user.update({
-      where: { id },
-      data: cleanedData,
+    const balanceChanged =
+      nextBalance !== undefined && Math.abs(nextBalance - existingUser.balance) > 0.001;
+    const balanceDelta = balanceChanged ? nextBalance - existingUser.balance : 0;
+    const adjustmentNote =
+      typeof balanceNote === 'string' && balanceNote.trim()
+        ? balanceNote.trim()
+        : 'Penyesuaian saldo oleh admin';
+
+    const user = await db.$transaction(async (tx) => {
+      const updatedUser = await tx.user.update({
+        where: { id },
+        data: cleanedData,
+      });
+
+      if (balanceChanged) {
+        await tx.transaction.create({
+          data: {
+            userId: id,
+            type: 'admin_adjustment',
+            amount: balanceDelta,
+            desc: `Penyesuaian saldo admin: ${formatSignedRupiah(balanceDelta)}`,
+            status: 'approved',
+            note: adjustmentNote,
+          },
+        });
+      }
+
+      return updatedUser;
     });
 
     return NextResponse.json({ user });
@@ -77,6 +123,11 @@ export async function PATCH(
     console.error('Update user error:', error);
     return NextResponse.json({ error: 'Gagal memperbarui pengguna' }, { status: 500 });
   }
+}
+
+function formatSignedRupiah(amount: number) {
+  const sign = amount >= 0 ? '+' : '-';
+  return `${sign}Rp ${Math.abs(amount).toLocaleString('id-ID')}`;
 }
 
 export async function DELETE(
