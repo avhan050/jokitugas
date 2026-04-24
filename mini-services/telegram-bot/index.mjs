@@ -79,6 +79,18 @@ async function notifyUserChat(chatId, text) {
   });
 }
 
+async function answerCallback(callbackId, text, showAlert = false) {
+  if (!callbackId) return;
+
+  await callTelegram('answerCallbackQuery', {
+    callback_query_id: callbackId,
+    text,
+    show_alert: showAlert,
+  }).catch((error) => {
+    console.error('Telegram answerCallbackQuery error:', error);
+  });
+}
+
 async function callTelegram(method, payload) {
   let lastError = null;
 
@@ -408,27 +420,24 @@ async function handleCallbackQuery(callbackQuery) {
   const chatId = callbackQuery.message?.chat?.id;
   const messageId = callbackQuery.message?.message_id;
   const callbackId = callbackQuery.id;
+  const data = callbackQuery.data || '';
+
+  console.log('Telegram callback received:', {
+    callbackId,
+    chatId,
+    data,
+  });
 
   if (!isAuthorizedChat(chatId)) {
-    await callTelegram('answerCallbackQuery', {
-      callback_query_id: callbackId,
-      text: 'Akses ditolak.',
-      show_alert: true,
-    });
+    await answerCallback(callbackId, 'Akses ditolak.', true);
     return;
   }
-
-  const data = callbackQuery.data || '';
 
   if (data.startsWith('approve_tx:')) {
     const transactionId = data.slice('approve_tx:'.length);
     const result = await approveTransaction(transactionId);
 
-    await callTelegram('answerCallbackQuery', {
-      callback_query_id: callbackId,
-      text: result.message,
-      show_alert: !result.ok,
-    });
+    await answerCallback(callbackId, result.message, !result.ok);
 
     if (messageId) {
       const baseMessage = callbackQuery.message.caption || callbackQuery.message.text || 'Transaksi';
@@ -452,6 +461,8 @@ async function handleCallbackQuery(callbackQuery) {
         }).catch(() => null);
       }
     }
+
+    return;
   }
 
   if (data.startsWith('reject_tx:')) {
@@ -461,20 +472,13 @@ async function handleCallbackQuery(callbackQuery) {
     });
 
     if (!tx || tx.status !== 'pending' || !['topup', 'withdraw'].includes(tx.type)) {
-      await callTelegram('answerCallbackQuery', {
-        callback_query_id: callbackId,
-        text: 'Transaksi tidak ditemukan atau sudah diproses.',
-        show_alert: true,
-      });
+      await answerCallback(callbackId, 'Transaksi tidak ditemukan atau sudah diproses.', true);
       return;
     }
 
     const presets = REJECT_REASON_PRESETS[tx.type] || [];
 
-    await callTelegram('answerCallbackQuery', {
-      callback_query_id: callbackId,
-      text: 'Pilih alasan penolakan.',
-    });
+    await answerCallback(callbackId, 'Pilih alasan penolakan.');
 
     if (messageId) {
       const baseMessage = callbackQuery.message.caption || callbackQuery.message.text || 'Transaksi';
@@ -504,6 +508,8 @@ async function handleCallbackQuery(callbackQuery) {
         }).catch(() => null);
       }
     }
+
+    return;
   }
 
   if (data.startsWith('reject_reason:')) {
@@ -513,22 +519,14 @@ async function handleCallbackQuery(callbackQuery) {
     });
 
     if (!tx || tx.status !== 'pending' || !['topup', 'withdraw'].includes(tx.type)) {
-      await callTelegram('answerCallbackQuery', {
-        callback_query_id: callbackId,
-        text: 'Transaksi tidak ditemukan atau sudah diproses.',
-        show_alert: true,
-      });
+      await answerCallback(callbackId, 'Transaksi tidak ditemukan atau sudah diproses.', true);
       return;
     }
 
     const preset = (REJECT_REASON_PRESETS[tx.type] || []).find((item) => item.key === presetKey);
     const result = await rejectTransaction(transactionId, preset?.reason);
 
-    await callTelegram('answerCallbackQuery', {
-      callback_query_id: callbackId,
-      text: result.message,
-      show_alert: !result.ok,
-    });
+    await answerCallback(callbackId, result.message, !result.ok);
 
     if (messageId) {
       const baseMessage = callbackQuery.message.caption || callbackQuery.message.text || 'Transaksi';
@@ -552,7 +550,11 @@ async function handleCallbackQuery(callbackQuery) {
         }).catch(() => null);
       }
     }
+
+    return;
   }
+
+  await answerCallback(callbackId, 'Aksi tombol tidak dikenali.', true);
 }
 
 async function poll() {
@@ -565,6 +567,8 @@ async function poll() {
   const updates = response.result || [];
 
   for (const update of updates) {
+    offset = update.update_id + 1;
+
     try {
       if (update.message) {
         await handleMessage(update.message);
@@ -573,10 +577,12 @@ async function poll() {
       if (update.callback_query) {
         await handleCallbackQuery(update.callback_query);
       }
-
-      offset = update.update_id + 1;
     } catch (error) {
       console.error('Telegram update handling error:', error);
+
+      if (update.callback_query?.id) {
+        await answerCallback(update.callback_query.id, 'Terjadi error saat memproses aksi.', true);
+      }
     }
   }
 }
