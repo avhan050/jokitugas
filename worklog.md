@@ -1,5 +1,65 @@
 # Worklog
 
+## Task 6: Perbaikan Kompatibilitas Prisma untuk Railway
+
+**Date:** 2026-04-24
+
+### Summary
+Memperbaiki crash startup di Railway yang terjadi karena script bootstrap masih memakai Prisma client lama dari `@prisma/client`, sementara generator Prisma sudah dipindah ke `src/generated/prisma`.
+
+### Masalah
+
+Saat startup Railway:
+- `prisma generate` berhasil
+- `prisma db push` berhasil
+- tetapi `node prisma/bootstrap-demo.mjs` crash
+
+Error utama:
+- `@prisma/client did not initialize yet`
+
+### Akar Penyebab
+
+Script di folder `prisma/` masih mengimpor:
+- `@prisma/client`
+
+Padahal generator Prisma di schema sudah diarahkan ke:
+- `src/generated/prisma`
+
+Akibatnya script bootstrap memakai lokasi client yang salah saat environment Railway menjalankan startup script.
+
+### Perubahan
+
+1. **Memperbaiki import Prisma client di script Prisma**
+   - `prisma/bootstrap-demo.mjs`
+   - `prisma/seed.mjs`
+   - `prisma/reset-demo.mjs`
+   - `prisma/clear-db.mjs`
+
+   Semua sekarang menggunakan:
+   - `../src/generated/prisma/index.js`
+
+2. **Menghapus warning deprecated Prisma config**
+   - Menghapus blok `package.json#prisma` yang memicu warning deprecated pada command Prisma.
+
+3. **Memverifikasi jalur startup yang setara dengan Railway**
+   - `npm run db:generate`
+   - `npm run db:push`
+   - `node prisma/bootstrap-demo.mjs`
+
+### Hasil Verifikasi
+
+- `npm run db:generate` berhasil
+- `npm run db:push` berhasil
+- `node prisma/bootstrap-demo.mjs` berhasil
+- `npm run build` aplikasi juga berhasil
+
+### Dampak
+
+- Startup Railway tidak lagi crash karena bootstrap Prisma memakai client yang salah.
+- Log deploy jadi lebih bersih karena warning deprecated Prisma config dihapus.
+
+---
+
 ## Task 5: Proteksi Hasil Kerja dan Panel Admin Sengketa
 
 **Date:** 2026-04-24
