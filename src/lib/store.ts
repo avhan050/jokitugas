@@ -1,6 +1,6 @@
 import React from 'react';
 import { create } from 'zustand';
-import type { User, Task, Transaction, ToastItem, AdminSettings, PageName, PublicStats, PageState } from './types';
+import type { User, Task, TaskMessage, Transaction, ToastItem, AdminSettings, PageName, PublicStats, PageState } from './types';
 import { genId } from './helpers';
 import { io, Socket } from 'socket.io-client';
 
@@ -14,6 +14,7 @@ interface AppState {
   // Data
   users: User[];
   tasks: Task[];
+  taskMessages: TaskMessage[];
   transactions: Transaction[];
   adminSettings: AdminSettings;
   publicStats: PublicStats;
@@ -46,12 +47,14 @@ interface AppState {
   removeToast: (id: string) => void;
 
   // Actions - Tasks
-  createTask: (task: Omit<Task, 'id' | 'createdAt' | 'completedAt' | 'clientRating' | 'workerRating' | 'escrowHeld' | 'workerId' | 'status' | 'takenAt' | 'submissionNote' | 'submissionUrl'>) => Promise<boolean>;
+  createTask: (task: Omit<Task, 'id' | 'createdAt' | 'completedAt' | 'clientRating' | 'workerRating' | 'escrowHeld' | 'workerId' | 'status' | 'takenAt' | 'submissionNote' | 'submissionUrl' | 'disputeReason' | 'disputedAt'>) => Promise<boolean>;
   takeTask: (taskId: string) => Promise<boolean>;
+  sendTaskMessage: (taskId: string, content: string) => Promise<boolean>;
   submitWork: (taskId: string, note: string, fileUrl?: string) => Promise<boolean>;
-  reviewWork: (taskId: string, action: 'accept' | 'revision' | 'reject') => Promise<boolean>;
+  reviewWork: (taskId: string, action: 'accept' | 'revision' | 'dispute', reason?: string) => Promise<boolean>;
   cancelTask: (taskId: string) => Promise<boolean>;
   rateTask: (taskId: string, rating: number, fromRole: 'client' | 'worker') => Promise<boolean>;
+  resolveTaskDispute: (taskId: string, action: 'pay_worker' | 'refund_client') => Promise<boolean>;
 
   // Actions - Transactions & Profile
   createTopup: (userId: string, amount: number, note: string, proofUrl?: string) => Promise<boolean>;
@@ -65,6 +68,7 @@ interface AppState {
   // Real-time
   initRealtime: (userId: string) => void;
   emitDataUpdate: (type: string, message?: string) => void;
+  emitUserScopedUpdate: (userIds: string[], type: string, message?: string) => void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -74,6 +78,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   showAuth: false,
   users: [],
   tasks: [],
+  taskMessages: [],
   transactions: [],
   adminSettings: {
     bank_name: 'Bank BCA',
@@ -131,6 +136,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
+  emitUserScopedUpdate: (userIds, type, message) => {
+    const socket = get().socket;
+    if (socket && userIds.length > 0) {
+      socket.emit('notify-users', { userIds, type, message, timestamp: Date.now() });
+    }
+  },
+
 
   fetchInitData: async () => {
     try {
@@ -141,6 +153,7 @@ export const useAppStore = create<AppState>((set, get) => ({
           currentUser: data.currentUser,
           users: data.users,
           tasks: data.tasks,
+          taskMessages: data.taskMessages || [],
           transactions: data.transactions,
           adminSettings: data.adminSettings || get().adminSettings,
           publicStats: data.publicStats || get().publicStats,
@@ -198,12 +211,22 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   logout: async () => {
-    if (get().channel) {
-      get().channel?.unsubscribe();
-      set({ channel: null });
+    if (get().socket) {
+      get().socket?.disconnect();
+      set({ socket: null });
     }
     await fetch('/api/auth/logout', { method: 'POST' });
-    set({ currentUser: null, currentPage: 'dashboard', pageState: {}, mobileSidebarOpen: false, showAuth: false });
+    set({
+      currentUser: null,
+      currentPage: 'dashboard',
+      pageState: {},
+      mobileSidebarOpen: false,
+      showAuth: false,
+      users: [],
+      tasks: [],
+      taskMessages: [],
+      transactions: [],
+    });
   },
 
   setPage: (page, pageState = {}) => set({ currentPage: page, pageState, mobileSidebarOpen: false }),
@@ -280,6 +303,28 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
+  sendTaskMessage: async (taskId, content) => {
+    try {
+      const res = await fetch(`/api/tasks/${taskId}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        await get().refreshData();
+        const task = get().tasks.find((item) => item.id === taskId);
+        const userIds = [task?.clientId, task?.workerId].filter((value): value is string => Boolean(value));
+        get().emitUserScopedUpdate(userIds, 'task-messages');
+        return true;
+      }
+      get().addToast(data.error || 'Gagal mengirim pesan', 'error');
+      return false;
+    } catch (error) {
+      return false;
+    }
+  },
+
   submitWork: async (taskId, note, fileUrl) => {
     try {
       const res = await fetch(`/api/tasks/${taskId}/submit`, {
@@ -301,19 +346,29 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-  reviewWork: async (taskId, action) => {
+  reviewWork: async (taskId, action, reason) => {
     try {
       const res = await fetch(`/api/tasks/${taskId}/review`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action }),
+        body: JSON.stringify({ action, reason }),
       });
       const data = await res.json();
       if (res.ok) {
         await get().refreshData();
-        const msgs = { accept: 'Tugas selesai!', revision: 'Revisi dikirim!', reject: 'Tugas dibatalkan & refund diproses' };
-        const socketMsgs = { accept: 'Tugas Anda telah diterima oleh Client!', revision: 'Client meminta revisi untuk tugas Anda.', reject: 'Tugas dibatalkan oleh Client.' };
-        get().emitDataUpdate('tasks', socketMsgs[action]);
+        const task = get().tasks.find((item) => item.id === taskId);
+        const userIds = [task?.clientId, task?.workerId].filter((value): value is string => Boolean(value));
+        const msgs = {
+          accept: 'Tugas selesai dan pembayaran diproses!',
+          revision: 'Permintaan revisi berhasil dikirim.',
+          dispute: 'Sengketa diajukan ke admin. Dana tetap ditahan sampai diputuskan.',
+        };
+        const socketMsgs = {
+          accept: 'Tugas Anda telah diterima oleh client.',
+          revision: 'Client meminta revisi untuk tugas Anda.',
+          dispute: 'Client mengajukan sengketa. Admin akan meninjau tugas ini.',
+        };
+        get().emitUserScopedUpdate(userIds, 'tasks', socketMsgs[action]);
         get().addToast(msgs[action], 'success');
         return true;
       }
@@ -352,6 +407,37 @@ export const useAppStore = create<AppState>((set, get) => ({
         get().addToast('Terima kasih atas ratingnya!', 'success');
         return true;
       }
+      return false;
+    } catch (error) {
+      return false;
+    }
+  },
+
+  resolveTaskDispute: async (taskId, action) => {
+    try {
+      const res = await fetch(`/api/admin/tasks/${taskId}/resolve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        await get().refreshData();
+        const task = get().tasks.find((item) => item.id === taskId);
+        const userIds = [task?.clientId, task?.workerId].filter((value): value is string => Boolean(value));
+        const socketMessage = action === 'pay_worker'
+          ? 'Sengketa selesai. Admin memutuskan pembayaran ke pekerja.'
+          : 'Sengketa selesai. Admin memutuskan refund ke client.';
+        get().emitUserScopedUpdate(userIds, 'tasks', socketMessage);
+        get().addToast(
+          action === 'pay_worker'
+            ? 'Sengketa selesai: pembayaran dikirim ke pekerja.'
+            : 'Sengketa selesai: refund dikirim ke client.',
+          'success'
+        );
+        return true;
+      }
+      get().addToast(data.error || 'Gagal menyelesaikan sengketa', 'error');
       return false;
     } catch (error) {
       return false;

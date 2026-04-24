@@ -1,15 +1,22 @@
 'use client';
 
+import { useState } from 'react';
 import { useAppStore } from '@/lib/store';
 import { CheckCircle, RotateCcw, XCircle, AlertTriangle } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function ReviewWorkModal({ taskId }: { taskId: string }) {
   const { tasks, reviewWork, closeModal } = useAppStore();
+  const [disputeReason, setDisputeReason] = useState('');
 
   const task = tasks.find((t) => t.id === taskId);
 
-  const handleAction = (decision: 'accept' | 'revision' | 'reject') => {
-    reviewWork(taskId, decision);
+  const handleAction = (decision: 'accept' | 'revision' | 'dispute') => {
+    if (decision === 'dispute' && !disputeReason.trim()) {
+      return;
+    }
+
+    reviewWork(taskId, decision, disputeReason);
     closeModal();
   };
 
@@ -40,7 +47,24 @@ export default function ReviewWorkModal({ taskId }: { taskId: string }) {
       >
         <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" style={{ color: 'var(--gold)' }} />
         <p className="text-xs" style={{ color: 'var(--gold)' }}>
-          Jika Anda menerima, pembayaran akan langsung diproses ke pekerja. Jika menolak, dana escrow akan dikembalikan ke saldo Anda.
+          Jika Anda menerima, pembayaran akan langsung diproses ke pekerja. Jika ada masalah serius, ajukan sengketa agar admin meninjau tanpa refund otomatis.
+        </p>
+      </div>
+
+      <div
+        className="rounded-xl p-4 space-y-2"
+        style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}
+      >
+        <p className="text-sm font-semibold">Alasan Sengketa</p>
+        <Textarea
+          value={disputeReason}
+          onChange={(event) => setDisputeReason(event.target.value)}
+          placeholder="Jelaskan alasan sengketa jika hasil tidak sesuai, misalnya file rusak, hasil tidak lengkap, atau pekerjaan tidak sesuai brief."
+          className="min-h-24 resize-none"
+          maxLength={1000}
+        />
+        <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
+          Field ini hanya wajib diisi jika Anda memilih ajukan sengketa.
         </p>
       </div>
 
@@ -62,12 +86,13 @@ export default function ReviewWorkModal({ taskId }: { taskId: string }) {
           Minta Revisi
         </button>
         <button
-          onClick={() => handleAction('reject')}
+          onClick={() => handleAction('dispute')}
           className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all"
           style={{ background: 'var(--danger-dim)', color: 'var(--danger)', border: '1px solid var(--danger)' }}
+          disabled={!disputeReason.trim()}
         >
           <XCircle size={18} />
-          Tolak & Refund
+          Ajukan Sengketa ke Admin
         </button>
       </div>
     </div>

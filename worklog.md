@@ -1,5 +1,256 @@
 # Worklog
 
+## Task 5: Proteksi Hasil Kerja dan Panel Admin Sengketa
+
+**Date:** 2026-04-24
+
+### Summary
+Mengubah alur setelah pekerja mengirim hasil kerja agar client tidak bisa lagi melakukan refund sepihak. Tombol `Tolak & Refund` diganti menjadi `Ajukan Sengketa ke Admin`, lalu admin memutuskan dari halaman terpisah apakah escrow dibayarkan ke pekerja atau direfund ke client.
+
+### Masalah yang Diselesaikan
+
+Sebelumnya ada celah bisnis:
+- pekerja mengirim hasil kerja
+- client melihat hasil
+- client bisa menolak lalu refund
+- pekerja tidak dibayar walaupun pekerjaan sudah dikirim
+
+Perubahan ini menutup celah tersebut dengan memindahkan keputusan final ke admin.
+
+### Perubahan Utama
+
+1. **Status tugas baru: `dispute`**
+   - Tugas yang disengketakan tidak langsung dibatalkan.
+   - Dana escrow tetap ditahan sampai admin memutuskan.
+
+2. **Field sengketa ditambahkan ke task**
+   - `disputeReason`
+   - `disputedAt`
+
+3. **Alur review client diubah**
+   - `Terima Hasil Kerja` tetap menyelesaikan tugas dan membayar pekerja.
+   - `Minta Revisi` tetap mengembalikan tugas ke status pengerjaan.
+   - `Tolak & Refund` dihapus.
+   - Diganti menjadi `Ajukan Sengketa ke Admin`.
+
+4. **Refund otomatis setelah hasil dikirim dihapus**
+   - Client tidak bisa lagi mengembalikan dana sendiri saat tugas sudah `under_review`.
+   - Refund atau pembayaran hanya bisa diputuskan admin pada status `dispute`.
+
+5. **Panel admin baru dibuat**
+   - Menambah halaman khusus `Sengketa Tugas`.
+   - Admin dapat melihat semua tugas yang disengketakan.
+   - Admin dapat memilih:
+     - `Putuskan Bayar Pekerja`
+     - `Putuskan Refund Client`
+
+6. **API admin sengketa ditambahkan**
+   - Route baru untuk menyelesaikan sengketa tugas oleh admin.
+
+7. **UI status sengketa diperluas**
+   - Badge status `Sengketa`
+   - Filter tugas `Sengketa` pada halaman client dan pekerja
+   - Detail tugas menampilkan alasan sengketa dan waktu pengajuan
+   - Dashboard admin menampilkan jumlah sengketa dan shortcut ke halaman sengketa
+
+### File yang Diubah
+
+1. **`prisma/schema.prisma`**
+   - Menambah field `disputeReason` dan `disputedAt` pada model `Task`
+
+2. **`prisma/dev.db`**
+   - Schema database lokal ikut diperbarui
+
+3. **`prisma/migrations/20260424010000_add_task_disputes/migration.sql`**
+   - Migration baru untuk field sengketa pada tugas
+
+4. **`src/lib/types.ts`**
+   - Menambah status `dispute`
+   - Menambah field `disputeReason` dan `disputedAt`
+   - Menambah page `admin-disputes`
+
+5. **`src/lib/helpers.ts`**
+   - Menambah label dan badge untuk status `dispute`
+
+6. **`src/lib/store.ts`**
+   - `reviewWork` diubah menjadi menerima aksi `dispute`
+   - Menambah action `resolveTaskDispute`
+
+7. **`src/app/api/tasks/[id]/review/route.ts`**
+   - Aksi `reject` dihapus
+   - Menambah aksi `dispute`
+
+8. **`src/app/api/admin/tasks/[id]/resolve/route.ts`**
+   - Route baru untuk keputusan admin atas sengketa
+
+9. **`src/components/pages/ReviewWorkModal.tsx`**
+   - Tombol `Tolak & Refund` diganti menjadi `Ajukan Sengketa ke Admin`
+   - Menambah field alasan sengketa
+
+10. **`src/components/pages/AdminDisputesPage.tsx`**
+    - Halaman admin baru khusus pengelolaan sengketa tugas
+
+11. **`src/components/app/Sidebar.tsx`**
+    - Menambah menu admin `Sengketa Tugas`
+
+12. **`src/components/app/TopBar.tsx`**
+    - Menambah judul halaman `Sengketa Tugas`
+
+13. **`src/components/app/AppLayout.tsx`**
+    - Mendaftarkan page baru `admin-disputes`
+
+14. **`src/components/pages/DashboardPage.tsx`**
+    - Menambah ringkasan jumlah sengketa pada dashboard admin
+    - Mengikutkan status `dispute` sebagai tugas aktif untuk client dan pekerja
+
+15. **`src/components/pages/MyTasksPage.tsx`**
+    - Menambah filter `Sengketa`
+    - Menyesuaikan progress step untuk status sengketa
+
+16. **`src/components/pages/MyWorkPage.tsx`**
+    - Menambah filter `Sengketa`
+    - Menyesuaikan progress step untuk status sengketa
+
+17. **`src/components/pages/TaskDetailModal.tsx`**
+    - Menampilkan panel informasi sengketa pada detail tugas
+    - Menyesuaikan progress step agar mencakup status sengketa
+
+### Perilaku Baru
+
+- Setelah pekerja mengirim hasil, client hanya punya 3 jalur:
+  - terima hasil
+  - minta revisi
+  - ajukan sengketa
+
+- Jika client mengajukan sengketa:
+  - tugas masuk status `dispute`
+  - alasan sengketa disimpan
+  - escrow tetap ditahan
+  - admin memutuskan hasil akhir
+
+- Jika admin memilih `Putuskan Bayar Pekerja`:
+  - tugas selesai
+  - pekerja menerima pembayaran
+
+- Jika admin memilih `Putuskan Refund Client`:
+  - tugas dibatalkan
+  - client menerima refund
+
+### Verifikasi
+
+- `npm run db:push` berhasil.
+- `npm run db:generate` berhasil.
+- `git diff --check` bersih.
+
+### Catatan
+
+- Sekarang sengketa dan verifikasi transaksi dipisah menjadi dua area admin yang berbeda agar aksesnya tidak membingungkan.
+
+---
+
+## Task 4: Fitur Chat Tugas antara Client dan Pekerja
+
+**Date:** 2026-04-24
+
+### Summary
+Menambahkan fitur chat per tugas agar client dan pekerja bisa berkomunikasi langsung setelah tugas diambil. Chat ditampilkan di detail tugas, pesan disimpan di database, dan pembaruan pesan ikut ter-refresh lewat socket ke user yang terkait.
+
+### Perubahan Utama
+
+1. **Model database chat ditambahkan**
+   - Menambah model `TaskMessage` pada Prisma untuk menyimpan pesan berdasarkan `taskId`, `senderId`, `content`, dan `createdAt`.
+   - Relasi baru dihubungkan ke `User` dan `Task`.
+
+2. **API chat per tugas dibuat**
+   - Menambah endpoint `GET/POST /api/tasks/[id]/messages`.
+   - Validasi akses dibatasi hanya untuk client dan pekerja yang terlibat pada tugas.
+   - Chat hanya aktif setelah tugas sudah memiliki `workerId`.
+
+3. **State aplikasi diperluas**
+   - Menambah tipe `TaskMessage`.
+   - Menambah `taskMessages` ke Zustand store.
+   - Menambah action `sendTaskMessage(taskId, content)`.
+
+4. **UI chat ditambahkan ke detail tugas**
+   - Chat muncul di modal detail tugas.
+   - Menampilkan daftar pesan, nama pengirim, peran, waktu kirim, dan form kirim pesan.
+   - Enter mengirim pesan, `Shift+Enter` membuat baris baru.
+
+5. **Realtime notifikasi diperbaiki**
+   - Socket server ditambah event `notify-users`.
+   - Refresh data untuk chat tidak lagi harus broadcast ke semua user, tetapi bisa diarahkan ke room user yang terkait dengan tugas.
+
+6. **Prisma client dipindahkan ke folder project**
+   - Generator Prisma diarahkan ke `src/generated/prisma`.
+   - `src/lib/db.ts` diperbarui agar mengambil `PrismaClient` dari folder generated lokal.
+   - Perubahan ini dilakukan karena generated client lama di `node_modules/.prisma` terkendala permission.
+
+### File yang Diubah
+
+1. **`prisma/schema.prisma`**
+   - Menambah model `TaskMessage`
+   - Menyesuaikan output Prisma client ke `src/generated/prisma`
+
+2. **`prisma/dev.db`**
+   - Schema SQLite lokal sudah ikut ter-update
+
+3. **`prisma/migrations/20260424000000_add_task_messages/migration.sql`**
+   - Migration baru untuk tabel chat tugas
+
+4. **`src/lib/types.ts`**
+   - Menambah interface `TaskMessage`
+
+5. **`src/lib/store.ts`**
+   - Menambah state `taskMessages`
+   - Menambah action `sendTaskMessage`
+   - Menambah `emitUserScopedUpdate`
+   - Menyesuaikan logout agar socket dibersihkan dengan benar
+
+6. **`src/app/api/init-data/route.ts`**
+   - Mengikutkan data `taskMessages`
+   - Menyesuaikan daftar user yang dimuat agar mencakup partisipan tugas/chat
+
+7. **`src/app/api/tasks/[id]/messages/route.ts`**
+   - Route baru untuk membaca dan mengirim pesan tugas
+
+8. **`src/components/pages/TaskDetailModal.tsx`**
+   - Menambah panel chat tugas
+   - Menambah textarea, daftar pesan, dan tombol kirim
+
+9. **`mini-services/socket-server/index.mjs`**
+   - Menambah event socket `notify-users` untuk refresh terbatas ke user terkait
+
+10. **`src/lib/db.ts`**
+    - Import `PrismaClient` dipindahkan ke `@/generated/prisma`
+
+11. **`src/generated/`**
+    - Folder generated Prisma client baru
+
+### Perilaku Fitur
+
+- Chat tersedia setelah pekerja mengambil tugas.
+- Hanya client pemilik tugas dan pekerja yang mengambil tugas yang bisa melihat dan mengirim pesan.
+- Pesan disimpan permanen di database dan ikut tampil lagi saat halaman direfresh.
+- Pengiriman pesan memicu refresh data ke user yang terkait dengan tugas tersebut.
+
+### Verifikasi
+
+- `npm run db:push` berhasil dan database lokal sinkron.
+- `npm run db:generate` berhasil setelah output Prisma client dipindah ke folder project.
+- `git diff --check` bersih.
+- `npm run lint` dan `npx tsc --noEmit` belum memberi hasil final di environment ini karena proses timeout sebelum output selesai tampil.
+
+### Catatan Operasional
+
+- Setelah deploy perubahan ini, aplikasi Next.js dan socket server perlu direstart.
+- Jika nanti ingin dikembangkan lagi, fitur chat ini paling aman dilanjutkan dengan:
+  - unread count
+  - notifikasi pesan baru
+  - attachment file di chat
+  - polling / websocket event khusus pesan agar tidak perlu refresh data penuh
+
+---
+
 ## Task 2: JokiTugas Landing Page — HTML to Next.js TypeScript Conversion
 
 **Date:** 2026-04-19

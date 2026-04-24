@@ -101,6 +101,7 @@ export default function DashboardPage() {
     const pendingTx = transactions.filter(
       (t) => t.status === 'pending' && (t.type === 'topup' || t.type === 'withdraw')
     );
+    const disputedTasks = tasks.filter((t) => t.status === 'dispute');
     const totalRevenue = transactions
       .filter((t) => t.type === 'fee' && t.status === 'approved')
       .reduce((sum, t) => sum + Math.abs(t.amount), 0);
@@ -108,7 +109,7 @@ export default function DashboardPage() {
 
     return (
       <div className="space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
           <StatCard
             icon={<Coins size={24} style={{ color: 'var(--accent)' }} />}
             label="Pendapatan Aplikasi"
@@ -137,6 +138,13 @@ export default function DashboardPage() {
             color="var(--danger)"
             onClick={() => setPage('admin', { adminSection: 'pending' })}
           />
+          <StatCard
+            icon={<Hourglass size={24} style={{ color: 'var(--gold)' }} />}
+            label="Sengketa Tugas"
+            value={disputedTasks.length.toString()}
+            color="var(--gold)"
+            onClick={() => setPage('admin-disputes')}
+          />
         </div>
 
         <div>
@@ -164,7 +172,7 @@ export default function DashboardPage() {
   if (currentUser.role === 'client') {
     const myTasks = tasks.filter((t) => t.clientId === currentUser.id);
     const openCount = myTasks.filter((t) => t.status === 'open').length;
-    const activeCount = myTasks.filter((t) => t.status === 'in_progress' || t.status === 'under_review').length;
+    const activeCount = myTasks.filter((t) => t.status === 'in_progress' || t.status === 'under_review' || t.status === 'dispute').length;
     const completedCount = myTasks.filter((t) => t.status === 'completed').length;
     const totalSpent = transactions
       .filter((t) => t.userId === currentUser.id && (t.type === 'escrow' || t.type === 'fee') && t.status === 'approved')
@@ -232,7 +240,7 @@ export default function DashboardPage() {
   // Worker dashboard
   const myWork = tasks.filter((t) => t.workerId === currentUser.id);
   const openTasks = tasks.filter((t) => t.status === 'open');
-  const activeCount = myWork.filter((t) => t.status === 'in_progress' || t.status === 'under_review').length;
+  const activeCount = myWork.filter((t) => t.status === 'in_progress' || t.status === 'under_review' || t.status === 'dispute').length;
   const completedCount = myWork.filter((t) => t.status === 'completed').length;
   const totalEarned = transactions
     .filter((t) => t.userId === currentUser.id && t.type === 'earning' && t.status === 'approved')

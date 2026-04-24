@@ -25,6 +25,13 @@ io.on('connection', (socket) => {
     io.emit('refresh-required', data);
   });
 
+  socket.on('notify-users', (data) => {
+    const { userIds = [], ...payload } = data || {};
+    userIds.forEach((userId) => {
+      io.to(`user-${userId}`).emit('refresh-required', payload);
+    });
+  });
+
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
   });

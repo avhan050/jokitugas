@@ -14,7 +14,7 @@ export async function POST(
 
     const { id: taskId } = await params;
     const clientId = session.id as string;
-    const { action } = await request.json(); // 'accept', 'revision', 'reject'
+    const { action, reason } = await request.json(); // 'accept', 'revision', 'dispute'
 
     const task = await db.task.findUnique({
       where: { id: taskId },
@@ -65,32 +65,21 @@ export async function POST(
           status: 'in_progress',
         },
       });
-    } else if (action === 'reject') {
-      await db.$transaction([
-        db.task.update({
-          where: { id: taskId },
-          data: {
-            status: 'cancelled',
-            escrowHeld: false,
-          },
-        }),
-        db.user.update({
-          where: { id: task.clientId },
-          data: {
-            balance: { increment: task.budget },
-          },
-        }),
-        db.transaction.create({
-          data: {
-            userId: task.clientId,
-            type: 'refund',
-            amount: task.budget,
-            taskId: task.id,
-            desc: `Refund tugas (Ditolak): ${task.title}`,
-            status: 'approved',
-          },
-        }),
-      ]);
+    } else if (action === 'dispute') {
+      const disputeReason = typeof reason === 'string' ? reason.trim() : '';
+
+      if (!disputeReason) {
+        return NextResponse.json({ error: 'Alasan sengketa wajib diisi' }, { status: 400 });
+      }
+
+      await db.task.update({
+        where: { id: taskId },
+        data: {
+          status: 'dispute',
+          disputeReason,
+          disputedAt: new Date(),
+        },
+      });
     } else {
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }

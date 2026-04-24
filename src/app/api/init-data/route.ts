@@ -1,15 +1,29 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getSession } from '@/lib/auth';
-import type { User, Task, Transaction, AdminSettings } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
     const session = await getSession();
-    
-    // Fetch all data in parallel
+    const currentUser = session?.id
+      ? await db.user.findUnique({
+          where: { id: session.id as string },
+        })
+      : null;
+
+    const taskScope = currentUser?.role === 'admin'
+      ? {}
+      : currentUser
+        ? {
+            OR: [
+              { clientId: currentUser.id },
+              { workerId: currentUser.id },
+            ],
+          }
+        : undefined;
+
     const [
       tasks,
       transactions,
@@ -17,7 +31,8 @@ export async function GET() {
       totalCompletedTasks,
       totalWorkers,
       totalUsers,
-      ratedTasks
+      ratedTasks,
+      taskMessages,
     ] = await Promise.all([
       db.task.findMany({ orderBy: { createdAt: 'desc' } }),
       db.transaction.findMany({ orderBy: { createdAt: 'desc' } }),
@@ -34,7 +49,15 @@ export async function GET() {
           ]
         },
         select: { clientRating: true, workerRating: true }
-      })
+      }),
+      taskScope
+        ? db.taskMessage.findMany({
+            where: {
+              task: taskScope,
+            },
+            orderBy: { createdAt: 'asc' },
+          })
+        : Promise.resolve([]),
     ]);
 
     // Calculate average rating with proper type handling
@@ -57,20 +80,28 @@ export async function GET() {
       }
     }
 
-    // Get current user and other users if admin
-    let currentUser: any = null;
     let users: any[] = [];
 
-    if (session && session.id) {
-      currentUser = await db.user.findUnique({
-        where: { id: session.id as string },
+    if (currentUser?.role === 'admin') {
+      users = await db.user.findMany();
+    } else if (currentUser) {
+      const participantIds = new Set<string>([currentUser.id]);
+      tasks.forEach((task) => {
+        if (task.clientId === currentUser.id || task.workerId === currentUser.id) {
+          participantIds.add(task.clientId);
+          if (task.workerId) {
+            participantIds.add(task.workerId);
+          }
+        }
       });
-      
-      if (currentUser?.role === 'admin') {
-        users = await db.user.findMany();
-      } else if (currentUser) {
-        users = [currentUser];
-      }
+
+      users = await db.user.findMany({
+        where: {
+          id: {
+            in: Array.from(participantIds),
+          },
+        },
+      });
     }
 
     // Helper to safely serialize objects (handles Date objects, etc.)
@@ -85,9 +116,10 @@ export async function GET() {
     };
 
     return NextResponse.json({
-      currentUser: serialize(currentUser),
-      users: serialize(users),
+      currentUser: serialize(currentUser ? { ...currentUser, password: undefined } : null),
+      users: serialize(users.map(({ password, ...user }) => user)),
       tasks: serialize(tasks),
+      taskMessages: serialize(taskMessages),
       transactions: serialize(transactions),
       adminSettings: serialize(adminSettings),
       publicStats: {

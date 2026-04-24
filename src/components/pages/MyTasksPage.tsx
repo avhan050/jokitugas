@@ -12,6 +12,7 @@ const filters = [
   { key: 'open', label: 'Terbuka' },
   { key: 'active', label: 'Aktif' },
   { key: 'under_review', label: 'Ditinjau' },
+  { key: 'dispute', label: 'Sengketa' },
   { key: 'completed', label: 'Selesai' },
 ];
 
@@ -25,7 +26,7 @@ export default function MyTasksPage() {
   const filteredTasks = filter === 'all'
     ? myTasks
     : filter === 'active'
-      ? myTasks.filter((t) => t.status === 'in_progress' || t.status === 'under_review')
+      ? myTasks.filter((t) => t.status === 'in_progress' || t.status === 'under_review' || t.status === 'dispute')
       : myTasks.filter((t) => t.status === filter);
   const sortedTasks = [...filteredTasks].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
@@ -132,8 +133,8 @@ function TaskCard({ task, onClick }: { task: Task; onClick: () => void }) {
       {/* Progress steps */}
       {task.status !== 'cancelled' && (
         <div className="flex items-center gap-0 mt-4 px-1">
-          {(['open', 'in_progress', 'under_review', 'completed'] as const).map((step, i) => {
-            const statusOrder = ['open', 'in_progress', 'under_review', 'completed'];
+          {(['open', 'in_progress', 'under_review', 'dispute', 'completed'] as const).map((step, i, allSteps) => {
+            const statusOrder = ['open', 'in_progress', 'under_review', 'dispute', 'completed'];
             const currentIdx = statusOrder.indexOf(task.status);
             const stepIdx = i;
             const isDone = stepIdx < currentIdx;
@@ -144,7 +145,7 @@ function TaskCard({ task, onClick }: { task: Task; onClick: () => void }) {
                 <div className={`step-dot ${isDone ? 'done' : ''} ${isCurrent ? 'active' : ''}`}>
                   {isDone ? '✓' : i + 1}
                 </div>
-                {i < 3 && (
+                {i < allSteps.length - 1 && (
                   <div className={`step-line ${stepIdx < currentIdx ? 'filled' : ''}`} />
                 )}
               </div>

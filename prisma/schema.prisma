@@ -3,6 +3,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -25,6 +26,7 @@ model User {
   tasksAsClient Task[]        @relation("ClientTasks")
   tasksAsWorker Task[]        @relation("WorkerTasks")
   transactions  Transaction[]
+  taskMessages  TaskMessage[]
 }
 
 model Task {
@@ -45,9 +47,26 @@ model Task {
   submissionNote String?
   submissionUrl  String?
   takenAt        DateTime?
+  disputeReason  String?
+  disputedAt     DateTime?
 
   client User  @relation("ClientTasks", fields: [clientId], references: [id])
   worker User? @relation("WorkerTasks", fields: [workerId], references: [id])
+  messages TaskMessage[]
+}
+
+model TaskMessage {
+  id        String   @id @default(cuid())
+  taskId     String
+  senderId   String
+  content    String
+  createdAt  DateTime @default(now())
+
+  task   Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  sender User @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([taskId, createdAt])
+  @@index([senderId])
 }
 
 model Transaction {

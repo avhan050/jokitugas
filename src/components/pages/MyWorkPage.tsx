@@ -11,6 +11,7 @@ const filters = [
   { key: 'all', label: 'Semua' },
   { key: 'active', label: 'Berjalan' },
   { key: 'under_review', label: 'Ditinjau' },
+  { key: 'dispute', label: 'Sengketa' },
   { key: 'completed', label: 'Selesai' },
 ];
 
@@ -24,7 +25,7 @@ export default function MyWorkPage() {
   const filtered = filter === 'all'
     ? myWork
     : filter === 'active'
-      ? myWork.filter((t) => t.status === 'in_progress' || t.status === 'under_review')
+      ? myWork.filter((t) => t.status === 'in_progress' || t.status === 'under_review' || t.status === 'dispute')
       : myWork.filter((t) => t.status === filter);
   const sorted = [...filtered].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
@@ -107,8 +108,8 @@ export default function MyWorkPage() {
             {/* Progress steps */}
             {task.status !== 'cancelled' && (
               <div className="flex items-center gap-0 mt-2 px-1">
-                {(['open', 'in_progress', 'under_review', 'completed'] as const).map((step, i) => {
-                  const statusOrder = ['open', 'in_progress', 'under_review', 'completed'];
+                {(['open', 'in_progress', 'under_review', 'dispute', 'completed'] as const).map((step, i, allSteps) => {
+                  const statusOrder = ['open', 'in_progress', 'under_review', 'dispute', 'completed'];
                   const currentIdx = statusOrder.indexOf(task.status);
                   const stepIdx = i;
                   const isDone = stepIdx < currentIdx;
@@ -119,7 +120,7 @@ export default function MyWorkPage() {
                       <div className={`step-dot ${isDone ? 'done' : ''} ${isCurrent ? 'active' : ''}`}>
                         {isDone ? '✓' : i + 1}
                       </div>
-                      {i < 3 && (
+                      {i < allSteps.length - 1 && (
                         <div className={`step-line ${stepIdx < currentIdx ? 'filled' : ''}`} />
                       )}
                     </div>

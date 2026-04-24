@@ -19,7 +19,7 @@ export interface Task {
   category: string;
   deadline: string;
   budget: number;
-  status: 'open' | 'in_progress' | 'under_review' | 'completed' | 'cancelled';
+  status: 'open' | 'in_progress' | 'under_review' | 'dispute' | 'completed' | 'cancelled';
   workerId: string | null;
   createdAt: string;
   completedAt: string | null;
@@ -29,6 +29,16 @@ export interface Task {
   submissionNote?: string;
   submissionUrl?: string;
   takenAt?: string;
+  disputeReason?: string | null;
+  disputedAt?: string | null;
+}
+
+export interface TaskMessage {
+  id: string;
+  taskId: string;
+  senderId: string;
+  content: string;
+  createdAt: string;
 }
 
 export interface Transaction {
@@ -69,7 +79,7 @@ export interface ToastItem {
 
 export interface PageState {
   myTasksFilter?: 'all' | 'active' | Task['status'];
-  myWorkFilter?: 'all' | 'active' | Extract<Task['status'], 'in_progress' | 'under_review' | 'completed'>;
+  myWorkFilter?: 'all' | 'active' | Extract<Task['status'], 'in_progress' | 'under_review' | 'dispute' | 'completed'>;
   walletTab?: 'topup' | 'withdraw';
   transactionsFilter?: 'all' | 'income' | 'expense';
   adminSection?: 'overview' | 'pending' | 'users';
@@ -85,4 +95,5 @@ export type PageName =
   | 'transactions'
   | 'profile'
   | 'admin'
-  | 'admin-users';
+  | 'admin-users'
+  | 'admin-disputes';

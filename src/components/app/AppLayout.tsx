@@ -13,6 +13,7 @@ import TransactionsPage from '@/components/pages/TransactionsPage';
 import ProfilePage from '@/components/pages/ProfilePage';
 import AdminPanelPage from '@/components/pages/AdminPanelPage';
 import AdminUsersPage from '@/components/pages/AdminUsersPage';
+import AdminDisputesPage from '@/components/pages/AdminDisputesPage';
 
 const pages: Record<string, React.ComponentType> = {
   dashboard: DashboardPage,
@@ -25,6 +26,7 @@ const pages: Record<string, React.ComponentType> = {
   profile: ProfilePage,
   admin: AdminPanelPage,
   'admin-users': AdminUsersPage,
+  'admin-disputes': AdminDisputesPage,
 };
 
 export default function AppLayout() {

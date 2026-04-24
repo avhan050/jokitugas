@@ -1,12 +1,15 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
 import { useAppStore } from '@/lib/store';
-import { formatRupiah, formatDate, formatDateShort, statusLabel, statusBadgeClass, categoryIcon } from '@/lib/helpers';
-import { Calendar, User, Star, Clock, Shield, Send, RotateCcw, X, MessageSquare } from 'lucide-react';
+import { formatRupiah, formatDate, formatDateShort, statusLabel, statusBadgeClass, getInitials } from '@/lib/helpers';
+import { Calendar, User, Star, Clock, Shield, Send, X, MessageSquare } from 'lucide-react';
 import ReviewWorkModal from './ReviewWorkModal';
 import SubmitWorkModal from './SubmitWorkModal';
 import RatingModal from './RatingModal';
 import TakeTaskModal from './TakeTaskModal';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Textarea } from '@/components/ui/textarea';
 
 const MIME_EXTENSION_MAP: Record<string, string> = {
   'application/msword': 'doc',
@@ -52,22 +55,29 @@ function buildDownloadName(taskTitle: string, submissionUrl: string) {
 }
 
 export default function TaskDetailModal({ taskId }: { taskId: string }) {
-  const { tasks, users, currentUser, closeModal, openModal, cancelTask } = useAppStore();
+  const { tasks, users, currentUser, closeModal, openModal, cancelTask, taskMessages, sendTaskMessage } = useAppStore();
+  const [messageDraft, setMessageDraft] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   const task = tasks.find((t) => t.id === taskId);
   if (!task || !currentUser) return null;
 
   const client = users.find((u) => u.id === task.clientId);
   const worker = task.workerId ? users.find((u) => u.id === task.workerId) : null;
-  const Icon = categoryIcon(task.category);
 
   const isClient = currentUser.id === task.clientId;
   const isWorker = currentUser.id === task.workerId;
-  const isAdmin = currentUser.role === 'admin';
+  const canChat = Boolean(task.workerId) && (isClient || isWorker);
+  const messages = taskMessages.filter((message) => message.taskId === task.id);
 
-  const statusSteps = ['open', 'in_progress', 'under_review', 'completed'] as const;
-  const statusOrder = ['open', 'in_progress', 'under_review', 'completed'];
+  const statusSteps = ['open', 'in_progress', 'under_review', 'dispute', 'completed'] as const;
+  const statusOrder = ['open', 'in_progress', 'under_review', 'dispute', 'completed'];
   const currentIdx = statusOrder.indexOf(task.status);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages.length]);
 
   const handleDownloadSubmission = async () => {
     if (!task.submissionUrl) return;
@@ -103,6 +113,18 @@ export default function TaskDetailModal({ taskId }: { taskId: string }) {
     }
   };
 
+  const handleSendMessage = async () => {
+    const content = messageDraft.trim();
+    if (!content || isSending) return;
+
+    setIsSending(true);
+    const success = await sendTaskMessage(task.id, content);
+    if (success) {
+      setMessageDraft('');
+    }
+    setIsSending(false);
+  };
+
   return (
     <div className="space-y-5">
       <div>
@@ -124,7 +146,7 @@ export default function TaskDetailModal({ taskId }: { taskId: string }) {
             const stepIdx = i;
             const isDone = stepIdx < currentIdx;
             const isCurrent = stepIdx === currentIdx;
-            const labels = ['Terbuka', 'Dikerjakan', 'Ditinjau', 'Selesai'];
+            const labels = ['Terbuka', 'Dikerjakan', 'Ditinjau', 'Sengketa', 'Selesai'];
 
             return (
               <div key={step} className="flex items-center flex-1">
@@ -136,7 +158,7 @@ export default function TaskDetailModal({ taskId }: { taskId: string }) {
                     {labels[i]}
                   </span>
                 </div>
-                {i < 3 && (
+                {i < statusSteps.length - 1 && (
                   <div className={`step-line ${stepIdx < currentIdx ? 'filled' : ''} mt-[-12px]`} />
                 )}
               </div>
@@ -196,7 +218,7 @@ export default function TaskDetailModal({ taskId }: { taskId: string }) {
             className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
             style={{ background: 'var(--accent-dim)', color: 'var(--accent)' }}
           >
-            {worker.name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)}
+            {getInitials(worker.name)}
           </div>
           <div className="flex-1">
             <p className="text-sm font-semibold">{worker.name}</p>
@@ -207,6 +229,138 @@ export default function TaskDetailModal({ taskId }: { taskId: string }) {
               </span>
               <span>•</span>
               <span>{worker.completedJobs} tugas selesai</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {task.status === 'dispute' && (
+        <div
+          className="rounded-xl p-4 space-y-2"
+          style={{ background: 'var(--danger-dim)', border: '1px solid var(--danger)' }}
+        >
+          <div className="flex items-center gap-2">
+            <MessageSquare size={16} style={{ color: 'var(--danger)' }} />
+            <span className="text-sm font-semibold" style={{ color: 'var(--danger)' }}>Tugas Dalam Sengketa</span>
+          </div>
+          <p className="text-sm">{task.disputeReason || 'Client mengajukan sengketa dan admin sedang meninjau tugas ini.'}</p>
+          {task.disputedAt && (
+            <p className="text-xs" style={{ color: 'var(--danger)' }}>
+              Diajukan pada {formatDate(task.disputedAt)}
+            </p>
+          )}
+        </div>
+      )}
+
+      {canChat && (
+        <div
+          className="rounded-xl p-4 space-y-4"
+          style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <MessageSquare size={16} style={{ color: 'var(--accent)' }} />
+                <span className="text-sm font-semibold">Chat Tugas</span>
+              </div>
+              <p className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>
+                Komunikasi langsung antara client dan pekerja untuk tugas ini.
+              </p>
+            </div>
+            <span className="text-xs font-semibold" style={{ color: 'var(--muted-foreground)' }}>
+              {messages.length} pesan
+            </span>
+          </div>
+
+          <ScrollArea
+            className="h-72 rounded-xl"
+            style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
+          >
+            <div className="space-y-3 p-3">
+              {messages.length === 0 && (
+                <div className="rounded-xl px-4 py-8 text-center text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                  Belum ada pesan. Mulai percakapan untuk koordinasi tugas ini.
+                </div>
+              )}
+
+              {messages.map((message) => {
+                const sender = users.find((user) => user.id === message.senderId);
+                const isOwnMessage = message.senderId === currentUser.id;
+                const roleLabel = message.senderId === task.clientId ? 'Client' : 'Pekerja';
+
+                return (
+                  <div
+                    key={message.id}
+                    className={`flex gap-3 ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
+                  >
+                    {!isOwnMessage && (
+                      <div
+                        className="mt-1 h-8 w-8 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0"
+                        style={{ background: 'var(--accent-dim)', color: 'var(--accent)' }}
+                      >
+                        {getInitials(sender?.name || roleLabel)}
+                      </div>
+                    )}
+                    <div
+                      className="max-w-[85%] rounded-2xl px-4 py-3"
+                      style={{
+                        background: isOwnMessage ? 'var(--accent)' : 'var(--bg)',
+                        color: isOwnMessage ? '#0B1120' : 'var(--foreground)',
+                        border: isOwnMessage ? 'none' : '1px solid var(--border)',
+                      }}
+                    >
+                      <div className="flex items-center gap-2 text-[11px] font-semibold mb-1" style={{ color: isOwnMessage ? '#0B1120' : 'var(--muted-foreground)' }}>
+                        <span>{sender?.name || roleLabel}</span>
+                        <span>•</span>
+                        <span>{roleLabel}</span>
+                        <span>•</span>
+                        <span>{formatDate(message.createdAt)}</span>
+                      </div>
+                      <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+                    </div>
+                    {isOwnMessage && (
+                      <div
+                        className="mt-1 h-8 w-8 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0"
+                        style={{ background: 'var(--accent)', color: '#0B1120' }}
+                      >
+                        {getInitials(sender?.name || currentUser.name)}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              <div ref={messagesEndRef} />
+            </div>
+          </ScrollArea>
+
+          <div className="space-y-3">
+            <Textarea
+              value={messageDraft}
+              onChange={(event) => setMessageDraft(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                  event.preventDefault();
+                  void handleSendMessage();
+                }
+              }}
+              placeholder="Tulis pesan untuk client / pekerja..."
+              maxLength={2000}
+              className="min-h-24 resize-none"
+            />
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
+                Enter untuk kirim, Shift+Enter untuk baris baru.
+              </span>
+              <button
+                type="button"
+                onClick={() => void handleSendMessage()}
+                disabled={isSending || !messageDraft.trim()}
+                className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all disabled:cursor-not-allowed disabled:opacity-50"
+                style={{ background: 'var(--accent)', color: '#0B1120' }}
+              >
+                <Send size={16} />
+                {isSending ? 'Mengirim...' : 'Kirim'}
+              </button>
             </div>
           </div>
         </div>
