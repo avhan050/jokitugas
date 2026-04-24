@@ -1,5 +1,86 @@
 # Worklog
 
+## Task 7: Bot Telegram Admin untuk Notifikasi dan Approve Transaksi
+
+**Date:** 2026-04-24
+
+### Summary
+Menambahkan bot Telegram admin yang dapat:
+- mengirim notifikasi saat ada transaksi `pending`
+- menampilkan daftar transaksi pending lewat perintah Telegram
+- menyetujui transaksi langsung dari Telegram dengan tombol `Approve`
+
+### Fitur Bot
+
+1. **Notifikasi otomatis transaksi pending**
+   - Saat user membuat transaksi top up atau withdraw, sistem mengirim pesan Telegram ke chat admin.
+   - Pesan berisi jenis transaksi, nama user, email, jumlah, waktu, deskripsi, dan ID transaksi.
+
+2. **Approve langsung dari Telegram**
+   - Pesan notifikasi memiliki tombol inline `Approve`.
+   - Saat ditekan, bot akan menyetujui transaksi pending dan memperbarui saldo user sesuai logika admin panel.
+
+3. **Perintah bot**
+   - `/start` untuk melihat status bot
+   - `/pending` untuk melihat daftar transaksi pending terbaru
+
+4. **Akses admin dibatasi**
+   - Bot hanya merespons `TELEGRAM_ADMIN_CHAT_ID` yang dikonfigurasi.
+
+### File yang Ditambahkan
+
+1. **`mini-services/telegram-bot/index.mjs`**
+   - Service bot Telegram berbasis polling
+   - Menangani command `/start`, `/pending`, dan callback `Approve`
+
+2. **`mini-services/telegram-bot/package.json`**
+   - Package service bot
+
+3. **`src/lib/telegram.ts`**
+   - Helper untuk mengirim notifikasi Telegram dari aplikasi utama
+
+### File yang Diubah
+
+1. **`src/app/api/transactions/route.ts`**
+   - Setelah transaksi pending dibuat, sistem mengirim notifikasi Telegram ke admin
+
+2. **`start-railway.sh`**
+   - Menambah startup opsional untuk Telegram bot
+
+3. **`deploy.sh`**
+   - Menambah startup opsional bot dengan PM2
+
+### Environment Variable Baru
+
+- `ENABLE_TELEGRAM_BOT=true`
+- `TELEGRAM_BOT_TOKEN=...`
+- `TELEGRAM_ADMIN_CHAT_ID=...`
+- opsional: `TELEGRAM_BOT_POLL_INTERVAL_MS=1500`
+
+### Perilaku
+
+- Jika bot belum dikonfigurasi, aplikasi utama tetap berjalan normal.
+- Jika env bot diisi lengkap, bot akan aktif dan berjalan di background.
+- Bot hanya bisa approve transaksi `topup` dan `withdraw`.
+
+### Verifikasi
+
+- `eslint` pada helper dan route Telegram: lolos
+- `node --check mini-services/telegram-bot/index.mjs`: lolos
+- `npm run build`: lolos
+
+### Update Konfigurasi Lanjutan
+
+- Bot diubah agar command `/start` tetap membalas dari chat mana pun dan menampilkan `chat id` pengirim.
+- Ini memudahkan pengecekan `TELEGRAM_ADMIN_CHAT_ID` yang benar saat setup pertama.
+- Bot juga diperluas agar transaksi top up dengan `proofUrl` mengirim gambar bukti transfer langsung ke Telegram, lengkap dengan caption dan tombol `Approve`.
+- Tombol `Reject` di bot diperluas menjadi dua tahap dengan alasan preset.
+- Sengketa tugas sekarang ikut mengirim notifikasi ke Telegram admin.
+- User sekarang bisa menghubungkan akun Telegram sendiri lewat kode link dari halaman profil dan command `/link KODE` di bot.
+- Setelah terhubung, user akan menerima notifikasi Telegram saat transaksi diputuskan admin dan saat sengketa tugas diputuskan admin.
+
+---
+
 ## Task 6: Perbaikan Kompatibilitas Prisma untuk Railway
 
 **Date:** 2026-04-24

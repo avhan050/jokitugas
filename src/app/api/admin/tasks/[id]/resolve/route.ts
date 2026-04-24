@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getSession } from '@/lib/auth';
+import { notifyUserDisputeDecision } from '@/lib/telegram';
 
 export async function POST(
   request: Request,
@@ -104,6 +105,44 @@ export async function POST(
     }
 
     const updatedTask = await db.task.findUnique({ where: { id: taskId } });
+
+    try {
+      const [client, worker] = await Promise.all([
+        db.user.findUnique({ where: { id: task.clientId } }),
+        db.user.findUnique({ where: { id: task.workerId } }),
+      ]);
+
+      if (action === 'pay_worker') {
+        await notifyUserDisputeDecision({
+          user: worker ? { ...worker, createdAt: worker.createdAt.toISOString() } : null,
+          task: {
+            ...task,
+            deadline: task.deadline.toISOString(),
+            createdAt: task.createdAt.toISOString(),
+            completedAt: task.completedAt ? task.completedAt.toISOString() : null,
+            takenAt: task.takenAt ? task.takenAt.toISOString() : undefined,
+            disputedAt: task.disputedAt ? task.disputedAt.toISOString() : null,
+          },
+          outcome: 'pay_worker',
+        });
+      } else {
+        await notifyUserDisputeDecision({
+          user: client ? { ...client, createdAt: client.createdAt.toISOString() } : null,
+          task: {
+            ...task,
+            deadline: task.deadline.toISOString(),
+            createdAt: task.createdAt.toISOString(),
+            completedAt: task.completedAt ? task.completedAt.toISOString() : null,
+            takenAt: task.takenAt ? task.takenAt.toISOString() : undefined,
+            disputedAt: task.disputedAt ? task.disputedAt.toISOString() : null,
+          },
+          outcome: 'refund_client',
+        });
+      }
+    } catch (telegramError) {
+      console.error('Telegram dispute decision notification error:', telegramError);
+    }
+
     return NextResponse.json({ task: updatedTask });
   } catch (error) {
     console.error('Resolve dispute error:', error);

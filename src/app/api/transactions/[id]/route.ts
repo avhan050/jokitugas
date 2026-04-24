@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getSession } from '@/lib/auth';
+import { notifyUserTransactionDecision } from '@/lib/telegram';
 
 export async function PATCH(
   request: Request,
@@ -55,6 +56,27 @@ export async function PATCH(
         where: { id: transactionId },
         data: { status: 'rejected', rejectionReason: String(reason).trim() },
       });
+    }
+
+    try {
+      const [user, updatedTransaction] = await Promise.all([
+        db.user.findUnique({ where: { id: tx.userId } }),
+        db.transaction.findUnique({ where: { id: transactionId } }),
+      ]);
+
+      if (updatedTransaction) {
+        await notifyUserTransactionDecision({
+          user: user
+            ? { ...user, createdAt: user.createdAt.toISOString() }
+            : null,
+          transaction: {
+            ...updatedTransaction,
+            createdAt: updatedTransaction.createdAt.toISOString(),
+          },
+        });
+      }
+    } catch (telegramError) {
+      console.error('Telegram user transaction notification error:', telegramError);
     }
 
     return NextResponse.json({ success: true });

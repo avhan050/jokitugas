@@ -3,6 +3,7 @@
 # Konfigurasi
 APP_NAME="jokitugas-web"
 SOCKET_NAME="jokitugas-socket"
+TELEGRAM_BOT_NAME="jokitugas-telegram-bot"
 PORT=3000
 SOCKET_PORT=3003
 
@@ -36,6 +37,12 @@ echo "🔄 Menjalankan layanan dengan PM2..."
 # Restart Socket Server
 pm2 delete $SOCKET_NAME 2>/dev/null || true
 pm2 start mini-services/socket-server/index.mjs --name "$SOCKET_NAME" --env PORT=$SOCKET_PORT
+
+# Restart Telegram Bot (opsional)
+if [ "${ENABLE_TELEGRAM_BOT:-false}" = "true" ] && [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_ADMIN_CHAT_ID:-}" ]; then
+    pm2 delete $TELEGRAM_BOT_NAME 2>/dev/null || true
+    pm2 start mini-services/telegram-bot/index.mjs --name "$TELEGRAM_BOT_NAME"
+fi
 
 # Restart Next.js Standalone
 # Next.js standalone server berada di .next/standalone/server.js

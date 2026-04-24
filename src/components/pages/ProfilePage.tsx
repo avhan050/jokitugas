@@ -3,16 +3,17 @@
 import { useState } from 'react';
 import { useAppStore } from '@/lib/store';
 import { formatRupiah, formatDate, statusLabel } from '@/lib/helpers';
-import { User, Star, CheckCircle, ListChecks, Save, Lock } from 'lucide-react';
+import { Star, CheckCircle, ListChecks, Save, Lock, Send, Unlink } from 'lucide-react';
 
 export default function ProfilePage() {
-  const { currentUser, updateProfile, changePassword } = useAppStore();
+  const { currentUser, updateProfile, changePassword, generateTelegramLinkCode, unlinkTelegram } = useAppStore();
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState(currentUser?.name || '');
   const [oldPass, setOldPass] = useState('');
   const [newPass, setNewPass] = useState('');
   const [confirmPass, setConfirmPass] = useState('');
   const [passError, setPassError] = useState('');
+  const [telegramCode, setTelegramCode] = useState(currentUser?.telegramLinkCode || '');
 
   if (!currentUser) return null;
 
@@ -60,6 +61,13 @@ export default function ProfilePage() {
   };
 
   const rb = roleBadgeColors[currentUser.role];
+
+  const handleGenerateTelegramCode = async () => {
+    const code = await generateTelegramLinkCode();
+    if (code) {
+      setTelegramCode(code);
+    }
+  };
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -154,6 +162,75 @@ export default function ProfilePage() {
 
         <div className="mt-4 text-xs" style={{ color: 'var(--muted-foreground)' }}>
           Bergabung sejak {formatDate(currentUser.createdAt)}
+        </div>
+      </div>
+
+      <div
+        className="rounded-2xl p-6"
+        style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
+      >
+        <div className="flex items-center gap-2 mb-4">
+          <Send size={18} style={{ color: 'var(--accent)' }} />
+          <h3 className="font-bold" style={{ fontFamily: 'var(--font-space-grotesk)' }}>Link Telegram</h3>
+        </div>
+
+        <div className="space-y-3 text-sm">
+          <p style={{ color: 'var(--muted-foreground)' }}>
+            Hubungkan akun Telegram agar menerima notifikasi transaksi dan update sengketa.
+          </p>
+
+          <div
+            className="rounded-xl p-4"
+            style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}
+          >
+            <p className="font-semibold">Status</p>
+            <p style={{ color: currentUser.telegramChatId ? 'var(--accent)' : 'var(--muted-foreground)' }}>
+              {currentUser.telegramChatId ? `Terhubung ke chat ID ${currentUser.telegramChatId}` : 'Belum terhubung'}
+            </p>
+          </div>
+
+          <div
+            className="rounded-xl p-4"
+            style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}
+          >
+            <p className="font-semibold mb-2">Cara menghubungkan</p>
+            <p style={{ color: 'var(--muted-foreground)' }}>1. Klik tombol buat kode.</p>
+            <p style={{ color: 'var(--muted-foreground)' }}>2. Kirim perintah <code>/link KODE</code> ke bot Telegram admin.</p>
+            <p style={{ color: 'var(--muted-foreground)' }}>3. Bot akan menghubungkan chat Telegram Anda ke akun ini.</p>
+          </div>
+
+          {telegramCode && (
+            <div
+              className="rounded-xl p-4"
+              style={{ background: 'var(--accent-dim)', border: '1px solid var(--accent)' }}
+            >
+              <p className="text-xs font-semibold" style={{ color: 'var(--muted-foreground)' }}>Kode aktif</p>
+              <p className="text-xl font-bold tracking-[0.25em]" style={{ fontFamily: 'var(--font-space-grotesk)', color: 'var(--accent)' }}>
+                {telegramCode}
+              </p>
+            </div>
+          )}
+
+          <div className="flex gap-3">
+            <button
+              onClick={handleGenerateTelegramCode}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all"
+              style={{ background: 'var(--accent)', color: '#0B1120' }}
+            >
+              <Send size={16} />
+              Buat Kode Link
+            </button>
+            {currentUser.telegramChatId && (
+              <button
+                onClick={() => void unlinkTelegram()}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all"
+                style={{ background: 'var(--danger-dim)', color: 'var(--danger)', border: '1px solid var(--danger)' }}
+              >
+                <Unlink size={16} />
+                Lepas Telegram
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

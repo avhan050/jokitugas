@@ -35,6 +35,16 @@ else
   echo "Socket server dilewati. Set ENABLE_SOCKET_SERVER=true jika ingin mengaktifkannya."
 fi
 
+echo "Starting Telegram Bot..."
+if [ "${ENABLE_TELEGRAM_BOT:-false}" = "true" ] && [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_ADMIN_CHAT_ID:-}" ]; then
+  (
+    cd "$APP_DIR/mini-services/telegram-bot"
+    node index.mjs
+  ) &
+else
+  echo "Telegram bot dilewati. Set ENABLE_TELEGRAM_BOT=true serta TELEGRAM_BOT_TOKEN dan TELEGRAM_ADMIN_CHAT_ID untuk mengaktifkannya."
+fi
+
 # 3. Persiapkan file statis untuk Standalone Mode
 echo "Syncing static assets..."
 if [ ! -f ".next/standalone/server.js" ]; then

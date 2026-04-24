@@ -22,6 +22,8 @@ model User {
   completedJobs Int      @default(0)
   createdAt     DateTime @default(now())
   isAdmin       Boolean  @default(false)
+  telegramChatId String?
+  telegramLinkCode String?
 
   tasksAsClient Task[]        @relation("ClientTasks")
   tasksAsWorker Task[]        @relation("WorkerTasks")

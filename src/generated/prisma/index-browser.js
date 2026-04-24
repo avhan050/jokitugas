@@ -128,7 +128,9 @@ exports.Prisma.UserScalarFieldEnum = {
   rating: 'rating',
   completedJobs: 'completedJobs',
   createdAt: 'createdAt',
-  isAdmin: 'isAdmin'
+  isAdmin: 'isAdmin',
+  telegramChatId: 'telegramChatId',
+  telegramLinkCode: 'telegramLinkCode'
 };
 
 exports.Prisma.TaskScalarFieldEnum = {

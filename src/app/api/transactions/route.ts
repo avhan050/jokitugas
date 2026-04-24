@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getSession } from '@/lib/auth';
+import { notifyPendingTransaction } from '@/lib/telegram';
 
 export async function GET() {
   try {
@@ -29,8 +30,13 @@ export async function POST(request: Request) {
 
     const { type, amount, desc, proofUrl, bankDetails, note } = await request.json();
 
+    const user = await db.user.findUnique({ where: { id: session.id as string } });
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
     if (type === 'withdraw') {
-      const user = await db.user.findUnique({ where: { id: session.id as string } });
       if (!user || user.balance < Math.abs(amount)) {
         return NextResponse.json({ error: 'Insufficient balance' }, { status: 400 });
       }
@@ -48,6 +54,23 @@ export async function POST(request: Request) {
         note,
       },
     });
+
+    try {
+      await notifyPendingTransaction(
+        {
+          ...transaction,
+          createdAt: transaction.createdAt.toISOString(),
+        },
+        user
+          ? {
+              ...user,
+              createdAt: user.createdAt.toISOString(),
+            }
+          : null
+      );
+    } catch (telegramError) {
+      console.error('Telegram notification error:', telegramError);
+    }
 
     return NextResponse.json({ transaction });
   } catch (error) {

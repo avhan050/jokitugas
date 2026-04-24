@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getSession } from '@/lib/auth';
+import { notifyTaskDispute } from '@/lib/telegram';
 
 export async function POST(
   request: Request,
@@ -80,6 +81,34 @@ export async function POST(
           disputedAt: new Date(),
         },
       });
+
+      try {
+        const [client, worker] = await Promise.all([
+          db.user.findUnique({ where: { id: task.clientId } }),
+          task.workerId ? db.user.findUnique({ where: { id: task.workerId } }) : Promise.resolve(null),
+        ]);
+
+        await notifyTaskDispute(
+          {
+            ...task,
+            status: 'dispute',
+            disputeReason,
+            disputedAt: new Date().toISOString(),
+            deadline: task.deadline.toISOString(),
+            createdAt: task.createdAt.toISOString(),
+            completedAt: task.completedAt ? task.completedAt.toISOString() : null,
+            takenAt: task.takenAt ? task.takenAt.toISOString() : undefined,
+          },
+          client
+            ? { ...client, createdAt: client.createdAt.toISOString() }
+            : null,
+          worker
+            ? { ...worker, createdAt: worker.createdAt.toISOString() }
+            : null
+        );
+      } catch (telegramError) {
+        console.error('Telegram dispute notification error:', telegramError);
+      }
     } else {
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }

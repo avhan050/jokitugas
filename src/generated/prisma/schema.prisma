@@ -12,16 +12,18 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(cuid())
-  name          String
-  email         String   @unique
-  password      String
-  role          String   @default("client") // client, worker, admin
-  balance       Float    @default(0)
-  rating        Float    @default(0)
-  completedJobs Int      @default(0)
-  createdAt     DateTime @default(now())
-  isAdmin       Boolean  @default(false)
+  id               String   @id @default(cuid())
+  name             String
+  email            String   @unique
+  password         String
+  role             String   @default("client") // client, worker, admin
+  balance          Float    @default(0)
+  rating           Float    @default(0)
+  completedJobs    Int      @default(0)
+  createdAt        DateTime @default(now())
+  isAdmin          Boolean  @default(false)
+  telegramChatId   String?
+  telegramLinkCode String?
 
   tasksAsClient Task[]        @relation("ClientTasks")
   tasksAsWorker Task[]        @relation("WorkerTasks")

@@ -64,6 +64,8 @@ interface AppState {
   updateProfile: (name: string) => Promise<boolean>;
   changePassword: (oldPass: string, newPass: string) => Promise<boolean>;
   updateAdminSettings: (settings: AdminSettings) => Promise<boolean>;
+  generateTelegramLinkCode: () => Promise<string | null>;
+  unlinkTelegram: () => Promise<boolean>;
   
   // Real-time
   initRealtime: (userId: string) => void;
@@ -567,6 +569,38 @@ export const useAppStore = create<AppState>((set, get) => ({
         get().addToast('Pengaturan diperbarui!', 'success');
         return true;
       }
+      return false;
+    } catch (error) {
+      return false;
+    }
+  },
+
+  generateTelegramLinkCode: async () => {
+    try {
+      const res = await fetch('/api/profile/telegram-link', { method: 'POST' });
+      const data = await res.json();
+      if (res.ok) {
+        await get().refreshData();
+        get().addToast('Kode link Telegram berhasil dibuat.', 'success');
+        return data.linkCode || null;
+      }
+      get().addToast(data.error || 'Gagal membuat kode Telegram', 'error');
+      return null;
+    } catch (error) {
+      return null;
+    }
+  },
+
+  unlinkTelegram: async () => {
+    try {
+      const res = await fetch('/api/profile/telegram-link', { method: 'DELETE' });
+      const data = await res.json();
+      if (res.ok) {
+        await get().refreshData();
+        get().addToast('Akun Telegram berhasil dilepas.', 'success');
+        return true;
+      }
+      get().addToast(data.error || 'Gagal melepas akun Telegram', 'error');
       return false;
     } catch (error) {
       return false;

@@ -9,6 +9,8 @@ export interface User {
   completedJobs: number;
   createdAt: string;
   isAdmin?: boolean;
+  telegramChatId?: string | null;
+  telegramLinkCode?: string | null;
 }
 
 export interface Task {

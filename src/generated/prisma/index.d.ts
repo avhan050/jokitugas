@@ -1348,6 +1348,8 @@ export namespace Prisma {
     completedJobs: number | null
     createdAt: Date | null
     isAdmin: boolean | null
+    telegramChatId: string | null
+    telegramLinkCode: string | null
   }
 
   export type UserMaxAggregateOutputType = {
@@ -1361,6 +1363,8 @@ export namespace Prisma {
     completedJobs: number | null
     createdAt: Date | null
     isAdmin: boolean | null
+    telegramChatId: string | null
+    telegramLinkCode: string | null
   }
 
   export type UserCountAggregateOutputType = {
@@ -1374,6 +1378,8 @@ export namespace Prisma {
     completedJobs: number
     createdAt: number
     isAdmin: number
+    telegramChatId: number
+    telegramLinkCode: number
     _all: number
   }
 
@@ -1401,6 +1407,8 @@ export namespace Prisma {
     completedJobs?: true
     createdAt?: true
     isAdmin?: true
+    telegramChatId?: true
+    telegramLinkCode?: true
   }
 
   export type UserMaxAggregateInputType = {
@@ -1414,6 +1422,8 @@ export namespace Prisma {
     completedJobs?: true
     createdAt?: true
     isAdmin?: true
+    telegramChatId?: true
+    telegramLinkCode?: true
   }
 
   export type UserCountAggregateInputType = {
@@ -1427,6 +1437,8 @@ export namespace Prisma {
     completedJobs?: true
     createdAt?: true
     isAdmin?: true
+    telegramChatId?: true
+    telegramLinkCode?: true
     _all?: true
   }
 
@@ -1527,6 +1539,8 @@ export namespace Prisma {
     completedJobs: number
     createdAt: Date
     isAdmin: boolean
+    telegramChatId: string | null
+    telegramLinkCode: string | null
     _count: UserCountAggregateOutputType | null
     _avg: UserAvgAggregateOutputType | null
     _sum: UserSumAggregateOutputType | null
@@ -1559,6 +1573,8 @@ export namespace Prisma {
     completedJobs?: boolean
     createdAt?: boolean
     isAdmin?: boolean
+    telegramChatId?: boolean
+    telegramLinkCode?: boolean
     tasksAsClient?: boolean | User$tasksAsClientArgs<ExtArgs>
     tasksAsWorker?: boolean | User$tasksAsWorkerArgs<ExtArgs>
     transactions?: boolean | User$transactionsArgs<ExtArgs>
@@ -1577,6 +1593,8 @@ export namespace Prisma {
     completedJobs?: boolean
     createdAt?: boolean
     isAdmin?: boolean
+    telegramChatId?: boolean
+    telegramLinkCode?: boolean
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -1590,6 +1608,8 @@ export namespace Prisma {
     completedJobs?: boolean
     createdAt?: boolean
     isAdmin?: boolean
+    telegramChatId?: boolean
+    telegramLinkCode?: boolean
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectScalar = {
@@ -1603,9 +1623,11 @@ export namespace Prisma {
     completedJobs?: boolean
     createdAt?: boolean
     isAdmin?: boolean
+    telegramChatId?: boolean
+    telegramLinkCode?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "password" | "role" | "balance" | "rating" | "completedJobs" | "createdAt" | "isAdmin", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "password" | "role" | "balance" | "rating" | "completedJobs" | "createdAt" | "isAdmin" | "telegramChatId" | "telegramLinkCode", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     tasksAsClient?: boolean | User$tasksAsClientArgs<ExtArgs>
     tasksAsWorker?: boolean | User$tasksAsWorkerArgs<ExtArgs>
@@ -1635,6 +1657,8 @@ export namespace Prisma {
       completedJobs: number
       createdAt: Date
       isAdmin: boolean
+      telegramChatId: string | null
+      telegramLinkCode: string | null
     }, ExtArgs["result"]["user"]>
     composites: {}
   }
@@ -2072,6 +2096,8 @@ export namespace Prisma {
     readonly completedJobs: FieldRef<"User", 'Int'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly isAdmin: FieldRef<"User", 'Boolean'>
+    readonly telegramChatId: FieldRef<"User", 'String'>
+    readonly telegramLinkCode: FieldRef<"User", 'String'>
   }
     
 
@@ -7168,7 +7194,9 @@ export namespace Prisma {
     rating: 'rating',
     completedJobs: 'completedJobs',
     createdAt: 'createdAt',
-    isAdmin: 'isAdmin'
+    isAdmin: 'isAdmin',
+    telegramChatId: 'telegramChatId',
+    telegramLinkCode: 'telegramLinkCode'
   };
 
   export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -7312,6 +7340,8 @@ export namespace Prisma {
     completedJobs?: IntFilter<"User"> | number
     createdAt?: DateTimeFilter<"User"> | Date | string
     isAdmin?: BoolFilter<"User"> | boolean
+    telegramChatId?: StringNullableFilter<"User"> | string | null
+    telegramLinkCode?: StringNullableFilter<"User"> | string | null
     tasksAsClient?: TaskListRelationFilter
     tasksAsWorker?: TaskListRelationFilter
     transactions?: TransactionListRelationFilter
@@ -7329,6 +7359,8 @@ export namespace Prisma {
     completedJobs?: SortOrder
     createdAt?: SortOrder
     isAdmin?: SortOrder
+    telegramChatId?: SortOrderInput | SortOrder
+    telegramLinkCode?: SortOrderInput | SortOrder
     tasksAsClient?: TaskOrderByRelationAggregateInput
     tasksAsWorker?: TaskOrderByRelationAggregateInput
     transactions?: TransactionOrderByRelationAggregateInput
@@ -7349,6 +7381,8 @@ export namespace Prisma {
     completedJobs?: IntFilter<"User"> | number
     createdAt?: DateTimeFilter<"User"> | Date | string
     isAdmin?: BoolFilter<"User"> | boolean
+    telegramChatId?: StringNullableFilter<"User"> | string | null
+    telegramLinkCode?: StringNullableFilter<"User"> | string | null
     tasksAsClient?: TaskListRelationFilter
     tasksAsWorker?: TaskListRelationFilter
     transactions?: TransactionListRelationFilter
@@ -7366,6 +7400,8 @@ export namespace Prisma {
     completedJobs?: SortOrder
     createdAt?: SortOrder
     isAdmin?: SortOrder
+    telegramChatId?: SortOrderInput | SortOrder
+    telegramLinkCode?: SortOrderInput | SortOrder
     _count?: UserCountOrderByAggregateInput
     _avg?: UserAvgOrderByAggregateInput
     _max?: UserMaxOrderByAggregateInput
@@ -7387,6 +7423,8 @@ export namespace Prisma {
     completedJobs?: IntWithAggregatesFilter<"User"> | number
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     isAdmin?: BoolWithAggregatesFilter<"User"> | boolean
+    telegramChatId?: StringNullableWithAggregatesFilter<"User"> | string | null
+    telegramLinkCode?: StringNullableWithAggregatesFilter<"User"> | string | null
   }
 
   export type TaskWhereInput = {
@@ -7735,6 +7773,8 @@ export namespace Prisma {
     completedJobs?: number
     createdAt?: Date | string
     isAdmin?: boolean
+    telegramChatId?: string | null
+    telegramLinkCode?: string | null
     tasksAsClient?: TaskCreateNestedManyWithoutClientInput
     tasksAsWorker?: TaskCreateNestedManyWithoutWorkerInput
     transactions?: TransactionCreateNestedManyWithoutUserInput
@@ -7752,6 +7792,8 @@ export namespace Prisma {
     completedJobs?: number
     createdAt?: Date | string
     isAdmin?: boolean
+    telegramChatId?: string | null
+    telegramLinkCode?: string | null
     tasksAsClient?: TaskUncheckedCreateNestedManyWithoutClientInput
     tasksAsWorker?: TaskUncheckedCreateNestedManyWithoutWorkerInput
     transactions?: TransactionUncheckedCreateNestedManyWithoutUserInput
@@ -7769,6 +7811,8 @@ export namespace Prisma {
     completedJobs?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isAdmin?: BoolFieldUpdateOperationsInput | boolean
+    telegramChatId?: NullableStringFieldUpdateOperationsInput | string | null
+    telegramLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
     tasksAsClient?: TaskUpdateManyWithoutClientNestedInput
     tasksAsWorker?: TaskUpdateManyWithoutWorkerNestedInput
     transactions?: TransactionUpdateManyWithoutUserNestedInput
@@ -7786,6 +7830,8 @@ export namespace Prisma {
     completedJobs?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isAdmin?: BoolFieldUpdateOperationsInput | boolean
+    telegramChatId?: NullableStringFieldUpdateOperationsInput | string | null
+    telegramLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
     tasksAsClient?: TaskUncheckedUpdateManyWithoutClientNestedInput
     tasksAsWorker?: TaskUncheckedUpdateManyWithoutWorkerNestedInput
     transactions?: TransactionUncheckedUpdateManyWithoutUserNestedInput
@@ -7803,6 +7849,8 @@ export namespace Prisma {
     completedJobs?: number
     createdAt?: Date | string
     isAdmin?: boolean
+    telegramChatId?: string | null
+    telegramLinkCode?: string | null
   }
 
   export type UserUpdateManyMutationInput = {
@@ -7816,6 +7864,8 @@ export namespace Prisma {
     completedJobs?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isAdmin?: BoolFieldUpdateOperationsInput | boolean
+    telegramChatId?: NullableStringFieldUpdateOperationsInput | string | null
+    telegramLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type UserUncheckedUpdateManyInput = {
@@ -7829,6 +7879,8 @@ export namespace Prisma {
     completedJobs?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isAdmin?: BoolFieldUpdateOperationsInput | boolean
+    telegramChatId?: NullableStringFieldUpdateOperationsInput | string | null
+    telegramLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type TaskCreateInput = {
@@ -8253,6 +8305,20 @@ export namespace Prisma {
     not?: NestedBoolFilter<$PrismaModel> | boolean
   }
 
+  export type StringNullableFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | null
+    notIn?: string[] | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    not?: NestedStringNullableFilter<$PrismaModel> | string | null
+  }
+
   export type TaskListRelationFilter = {
     every?: TaskWhereInput
     some?: TaskWhereInput
@@ -8269,6 +8335,11 @@ export namespace Prisma {
     every?: TaskMessageWhereInput
     some?: TaskMessageWhereInput
     none?: TaskMessageWhereInput
+  }
+
+  export type SortOrderInput = {
+    sort: SortOrder
+    nulls?: NullsOrder
   }
 
   export type TaskOrderByRelationAggregateInput = {
@@ -8294,6 +8365,8 @@ export namespace Prisma {
     completedJobs?: SortOrder
     createdAt?: SortOrder
     isAdmin?: SortOrder
+    telegramChatId?: SortOrder
+    telegramLinkCode?: SortOrder
   }
 
   export type UserAvgOrderByAggregateInput = {
@@ -8313,6 +8386,8 @@ export namespace Prisma {
     completedJobs?: SortOrder
     createdAt?: SortOrder
     isAdmin?: SortOrder
+    telegramChatId?: SortOrder
+    telegramLinkCode?: SortOrder
   }
 
   export type UserMinOrderByAggregateInput = {
@@ -8326,6 +8401,8 @@ export namespace Prisma {
     completedJobs?: SortOrder
     createdAt?: SortOrder
     isAdmin?: SortOrder
+    telegramChatId?: SortOrder
+    telegramLinkCode?: SortOrder
   }
 
   export type UserSumOrderByAggregateInput = {
@@ -8405,7 +8482,7 @@ export namespace Prisma {
     _max?: NestedBoolFilter<$PrismaModel>
   }
 
-  export type StringNullableFilter<$PrismaModel = never> = {
+  export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null
     in?: string[] | null
     notIn?: string[] | null
@@ -8416,7 +8493,10 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
-    not?: NestedStringNullableFilter<$PrismaModel> | string | null
+    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedStringNullableFilter<$PrismaModel>
+    _max?: NestedStringNullableFilter<$PrismaModel>
   }
 
   export type DateTimeNullableFilter<$PrismaModel = never> = {
@@ -8449,11 +8529,6 @@ export namespace Prisma {
   export type UserNullableScalarRelationFilter = {
     is?: UserWhereInput | null
     isNot?: UserWhereInput | null
-  }
-
-  export type SortOrderInput = {
-    sort: SortOrder
-    nulls?: NullsOrder
   }
 
   export type TaskCountOrderByAggregateInput = {
@@ -8532,23 +8607,6 @@ export namespace Prisma {
     budget?: SortOrder
     clientRating?: SortOrder
     workerRating?: SortOrder
-  }
-
-  export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | null
-    notIn?: string[] | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedStringNullableFilter<$PrismaModel>
-    _max?: NestedStringNullableFilter<$PrismaModel>
   }
 
   export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -8771,6 +8829,10 @@ export namespace Prisma {
     set?: boolean
   }
 
+  export type NullableStringFieldUpdateOperationsInput = {
+    set?: string | null
+  }
+
   export type TaskUpdateManyWithoutClientNestedInput = {
     create?: XOR<TaskCreateWithoutClientInput, TaskUncheckedCreateWithoutClientInput> | TaskCreateWithoutClientInput[] | TaskUncheckedCreateWithoutClientInput[]
     connectOrCreate?: TaskCreateOrConnectWithoutClientInput | TaskCreateOrConnectWithoutClientInput[]
@@ -8921,10 +8983,6 @@ export namespace Prisma {
     divide?: number
   }
 
-  export type NullableStringFieldUpdateOperationsInput = {
-    set?: string | null
-  }
-
   export type UserUpdateOneRequiredWithoutTasksAsClientNestedInput = {
     create?: XOR<UserCreateWithoutTasksAsClientInput, UserUncheckedCreateWithoutTasksAsClientInput>
     connectOrCreate?: UserCreateOrConnectWithoutTasksAsClientInput
@@ -9065,6 +9123,20 @@ export namespace Prisma {
     not?: NestedBoolFilter<$PrismaModel> | boolean
   }
 
+  export type NestedStringNullableFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | null
+    notIn?: string[] | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    not?: NestedStringNullableFilter<$PrismaModel> | string | null
+  }
+
   export type NestedStringWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[]
@@ -9136,42 +9208,6 @@ export namespace Prisma {
     _max?: NestedBoolFilter<$PrismaModel>
   }
 
-  export type NestedStringNullableFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | null
-    notIn?: string[] | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    not?: NestedStringNullableFilter<$PrismaModel> | string | null
-  }
-
-  export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
-    in?: Date[] | string[] | null
-    notIn?: Date[] | string[] | null
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
-  }
-
-  export type NestedIntNullableFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | null
-    notIn?: number[] | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableFilter<$PrismaModel> | number | null
-  }
-
   export type NestedStringNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null
     in?: string[] | null
@@ -9187,6 +9223,28 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedStringNullableFilter<$PrismaModel>
     _max?: NestedStringNullableFilter<$PrismaModel>
+  }
+
+  export type NestedIntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | null
+    notIn?: Date[] | string[] | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
   }
 
   export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -9525,6 +9583,8 @@ export namespace Prisma {
     completedJobs?: number
     createdAt?: Date | string
     isAdmin?: boolean
+    telegramChatId?: string | null
+    telegramLinkCode?: string | null
     tasksAsWorker?: TaskCreateNestedManyWithoutWorkerInput
     transactions?: TransactionCreateNestedManyWithoutUserInput
     taskMessages?: TaskMessageCreateNestedManyWithoutSenderInput
@@ -9541,6 +9601,8 @@ export namespace Prisma {
     completedJobs?: number
     createdAt?: Date | string
     isAdmin?: boolean
+    telegramChatId?: string | null
+    telegramLinkCode?: string | null
     tasksAsWorker?: TaskUncheckedCreateNestedManyWithoutWorkerInput
     transactions?: TransactionUncheckedCreateNestedManyWithoutUserInput
     taskMessages?: TaskMessageUncheckedCreateNestedManyWithoutSenderInput
@@ -9562,6 +9624,8 @@ export namespace Prisma {
     completedJobs?: number
     createdAt?: Date | string
     isAdmin?: boolean
+    telegramChatId?: string | null
+    telegramLinkCode?: string | null
     tasksAsClient?: TaskCreateNestedManyWithoutClientInput
     transactions?: TransactionCreateNestedManyWithoutUserInput
     taskMessages?: TaskMessageCreateNestedManyWithoutSenderInput
@@ -9578,6 +9642,8 @@ export namespace Prisma {
     completedJobs?: number
     createdAt?: Date | string
     isAdmin?: boolean
+    telegramChatId?: string | null
+    telegramLinkCode?: string | null
     tasksAsClient?: TaskUncheckedCreateNestedManyWithoutClientInput
     transactions?: TransactionUncheckedCreateNestedManyWithoutUserInput
     taskMessages?: TaskMessageUncheckedCreateNestedManyWithoutSenderInput
@@ -9633,6 +9699,8 @@ export namespace Prisma {
     completedJobs?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isAdmin?: BoolFieldUpdateOperationsInput | boolean
+    telegramChatId?: NullableStringFieldUpdateOperationsInput | string | null
+    telegramLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
     tasksAsWorker?: TaskUpdateManyWithoutWorkerNestedInput
     transactions?: TransactionUpdateManyWithoutUserNestedInput
     taskMessages?: TaskMessageUpdateManyWithoutSenderNestedInput
@@ -9649,6 +9717,8 @@ export namespace Prisma {
     completedJobs?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isAdmin?: BoolFieldUpdateOperationsInput | boolean
+    telegramChatId?: NullableStringFieldUpdateOperationsInput | string | null
+    telegramLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
     tasksAsWorker?: TaskUncheckedUpdateManyWithoutWorkerNestedInput
     transactions?: TransactionUncheckedUpdateManyWithoutUserNestedInput
     taskMessages?: TaskMessageUncheckedUpdateManyWithoutSenderNestedInput
@@ -9676,6 +9746,8 @@ export namespace Prisma {
     completedJobs?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isAdmin?: BoolFieldUpdateOperationsInput | boolean
+    telegramChatId?: NullableStringFieldUpdateOperationsInput | string | null
+    telegramLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
     tasksAsClient?: TaskUpdateManyWithoutClientNestedInput
     transactions?: TransactionUpdateManyWithoutUserNestedInput
     taskMessages?: TaskMessageUpdateManyWithoutSenderNestedInput
@@ -9692,6 +9764,8 @@ export namespace Prisma {
     completedJobs?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isAdmin?: BoolFieldUpdateOperationsInput | boolean
+    telegramChatId?: NullableStringFieldUpdateOperationsInput | string | null
+    telegramLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
     tasksAsClient?: TaskUncheckedUpdateManyWithoutClientNestedInput
     transactions?: TransactionUncheckedUpdateManyWithoutUserNestedInput
     taskMessages?: TaskMessageUncheckedUpdateManyWithoutSenderNestedInput
@@ -9773,6 +9847,8 @@ export namespace Prisma {
     completedJobs?: number
     createdAt?: Date | string
     isAdmin?: boolean
+    telegramChatId?: string | null
+    telegramLinkCode?: string | null
     tasksAsClient?: TaskCreateNestedManyWithoutClientInput
     tasksAsWorker?: TaskCreateNestedManyWithoutWorkerInput
     transactions?: TransactionCreateNestedManyWithoutUserInput
@@ -9789,6 +9865,8 @@ export namespace Prisma {
     completedJobs?: number
     createdAt?: Date | string
     isAdmin?: boolean
+    telegramChatId?: string | null
+    telegramLinkCode?: string | null
     tasksAsClient?: TaskUncheckedCreateNestedManyWithoutClientInput
     tasksAsWorker?: TaskUncheckedCreateNestedManyWithoutWorkerInput
     transactions?: TransactionUncheckedCreateNestedManyWithoutUserInput
@@ -9876,6 +9954,8 @@ export namespace Prisma {
     completedJobs?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isAdmin?: BoolFieldUpdateOperationsInput | boolean
+    telegramChatId?: NullableStringFieldUpdateOperationsInput | string | null
+    telegramLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
     tasksAsClient?: TaskUpdateManyWithoutClientNestedInput
     tasksAsWorker?: TaskUpdateManyWithoutWorkerNestedInput
     transactions?: TransactionUpdateManyWithoutUserNestedInput
@@ -9892,6 +9972,8 @@ export namespace Prisma {
     completedJobs?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isAdmin?: BoolFieldUpdateOperationsInput | boolean
+    telegramChatId?: NullableStringFieldUpdateOperationsInput | string | null
+    telegramLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
     tasksAsClient?: TaskUncheckedUpdateManyWithoutClientNestedInput
     tasksAsWorker?: TaskUncheckedUpdateManyWithoutWorkerNestedInput
     transactions?: TransactionUncheckedUpdateManyWithoutUserNestedInput
@@ -9908,6 +9990,8 @@ export namespace Prisma {
     completedJobs?: number
     createdAt?: Date | string
     isAdmin?: boolean
+    telegramChatId?: string | null
+    telegramLinkCode?: string | null
     tasksAsClient?: TaskCreateNestedManyWithoutClientInput
     tasksAsWorker?: TaskCreateNestedManyWithoutWorkerInput
     taskMessages?: TaskMessageCreateNestedManyWithoutSenderInput
@@ -9924,6 +10008,8 @@ export namespace Prisma {
     completedJobs?: number
     createdAt?: Date | string
     isAdmin?: boolean
+    telegramChatId?: string | null
+    telegramLinkCode?: string | null
     tasksAsClient?: TaskUncheckedCreateNestedManyWithoutClientInput
     tasksAsWorker?: TaskUncheckedCreateNestedManyWithoutWorkerInput
     taskMessages?: TaskMessageUncheckedCreateNestedManyWithoutSenderInput
@@ -9956,6 +10042,8 @@ export namespace Prisma {
     completedJobs?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isAdmin?: BoolFieldUpdateOperationsInput | boolean
+    telegramChatId?: NullableStringFieldUpdateOperationsInput | string | null
+    telegramLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
     tasksAsClient?: TaskUpdateManyWithoutClientNestedInput
     tasksAsWorker?: TaskUpdateManyWithoutWorkerNestedInput
     taskMessages?: TaskMessageUpdateManyWithoutSenderNestedInput
@@ -9972,6 +10060,8 @@ export namespace Prisma {
     completedJobs?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isAdmin?: BoolFieldUpdateOperationsInput | boolean
+    telegramChatId?: NullableStringFieldUpdateOperationsInput | string | null
+    telegramLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
     tasksAsClient?: TaskUncheckedUpdateManyWithoutClientNestedInput
     tasksAsWorker?: TaskUncheckedUpdateManyWithoutWorkerNestedInput
     taskMessages?: TaskMessageUncheckedUpdateManyWithoutSenderNestedInput
