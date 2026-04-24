@@ -5,6 +5,23 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_DIR="$SCRIPT_DIR"
 cd "$APP_DIR"
 
+normalize_database_url() {
+  if [ -z "${DATABASE_URL:-}" ]; then
+    return
+  fi
+
+  case "$DATABASE_URL" in
+    file:./*)
+      export DATABASE_URL="file:$APP_DIR/${DATABASE_URL#file:./}"
+      ;;
+    file:/*)
+      ;;
+    file:*)
+      export DATABASE_URL="file:$APP_DIR/${DATABASE_URL#file:}"
+      ;;
+  esac
+}
+
 if [ -z "${DATABASE_URL:-}" ]; then
   if [ -d "/data" ]; then
     mkdir -p /data
@@ -14,6 +31,8 @@ if [ -z "${DATABASE_URL:-}" ]; then
     export DATABASE_URL="file:$APP_DIR/prisma/dev.db"
   fi
 fi
+
+normalize_database_url
 
 echo "Using DATABASE_URL=${DATABASE_URL}"
 
@@ -27,20 +46,14 @@ node prisma/bootstrap-demo.mjs
 echo "Starting Socket Server..."
 SOCKET_PORT="${SOCKET_PORT:-3003}"
 if [ "${ENABLE_SOCKET_SERVER:-false}" = "true" ] && node -e "require.resolve('socket.io')" >/dev/null 2>&1; then
-  (
-    cd "$APP_DIR/mini-services/socket-server"
-    SOCKET_PORT="$SOCKET_PORT" node index.mjs
-  ) &
+  SOCKET_PORT="$SOCKET_PORT" node "$APP_DIR/mini-services/socket-server/index.mjs" &
 else
   echo "Socket server dilewati. Set ENABLE_SOCKET_SERVER=true jika ingin mengaktifkannya."
 fi
 
 echo "Starting Telegram Bot..."
 if [ "${ENABLE_TELEGRAM_BOT:-false}" = "true" ] && [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_ADMIN_CHAT_ID:-}" ]; then
-  (
-    cd "$APP_DIR/mini-services/telegram-bot"
-    node index.mjs
-  ) &
+  node "$APP_DIR/mini-services/telegram-bot/index.mjs" &
 else
   echo "Telegram bot dilewati. Set ENABLE_TELEGRAM_BOT=true serta TELEGRAM_BOT_TOKEN dan TELEGRAM_ADMIN_CHAT_ID untuk mengaktifkannya."
 fi

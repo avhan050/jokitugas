@@ -7,7 +7,28 @@ TELEGRAM_BOT_NAME="jokitugas-telegram-bot"
 PORT=3000
 SOCKET_PORT=3003
 
+normalize_database_url() {
+    if [ -z "${DATABASE_URL:-}" ]; then
+        return
+    fi
+
+    local app_dir
+    app_dir="$(pwd)"
+
+    case "$DATABASE_URL" in
+        file:./*)
+            export DATABASE_URL="file:$app_dir/${DATABASE_URL#file:./}"
+            ;;
+        file:/*)
+            ;;
+        file:*)
+            export DATABASE_URL="file:$app_dir/${DATABASE_URL#file:}"
+            ;;
+    esac
+}
+
 echo "🚀 Memulai proses deployment JokiTugas..."
+normalize_database_url
 
 # 1. Pastikan Node.js & PM2 terinstal
 if ! command -v pm2 &> /dev/null; then
