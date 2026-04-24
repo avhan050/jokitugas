@@ -61,23 +61,22 @@ export default function TaskDetailModal({ taskId }: { taskId: string }) {
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   const task = tasks.find((t) => t.id === taskId);
-  if (!task || !currentUser) return null;
-
-  const client = users.find((u) => u.id === task.clientId);
-  const worker = task.workerId ? users.find((u) => u.id === task.workerId) : null;
-
-  const isClient = currentUser.id === task.clientId;
-  const isWorker = currentUser.id === task.workerId;
-  const canChat = Boolean(task.workerId) && (isClient || isWorker);
-  const messages = taskMessages.filter((message) => message.taskId === task.id);
+  const client = task ? users.find((u) => u.id === task.clientId) : null;
+  const worker = task?.workerId ? users.find((u) => u.id === task.workerId) : null;
+  const isClient = Boolean(task && currentUser && currentUser.id === task.clientId);
+  const isWorker = Boolean(task && currentUser && currentUser.id === task.workerId);
+  const canChat = Boolean(task?.workerId) && (isClient || isWorker);
+  const messages = task ? taskMessages.filter((message) => message.taskId === task.id) : [];
 
   const statusSteps = ['open', 'in_progress', 'under_review', 'dispute', 'completed'] as const;
   const statusOrder = ['open', 'in_progress', 'under_review', 'dispute', 'completed'];
-  const currentIdx = statusOrder.indexOf(task.status);
+  const currentIdx = task ? statusOrder.indexOf(task.status) : -1;
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length]);
+
+  if (!task || !currentUser) return null;
 
   const handleDownloadSubmission = async () => {
     if (!task.submissionUrl) return;
